@@ -1,0 +1,32 @@
+{
+  "name": "pi-ling.prog",
+  "version": "1.0.0",
+  "description": "> Leia este guia **completamente** antes de começar a trabalhar no projeto.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/L-NevesDev/Projeto_Interdisciplinar_Ling.Prog.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/L-NevesDev/Projeto_Interdisciplinar_Ling.Prog/issues"
+  },
+  "homepage": "https://github.com/L-NevesDev/Projeto_Interdisciplinar_Ling.Prog#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "swagger-ui-express": "^5.0.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.7.0",
+    "@types/swagger-ui-express": "^4.1.8",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3"
+  }
+}

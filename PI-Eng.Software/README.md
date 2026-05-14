@@ -1,15 +1,22 @@
-# 1. O primeiro passo para o relatório é transformar a conversa em um escopo técnico.
+# 1. O primeiro passo para o relatório é transformar a conversa em um escopo técnico
 
-## Problema:
+## Problema
+
 - O escritório atende 110 clientes e gasta muito tempo em conferências manuais de notas e geração de guias (INSS, FGTS, DAS), com riscos de perda de prazos e falhas de comunicação.
-## Solução Proposta:
+
+## Solução Proposta
+
 - Um sistema de gestão contábil focado na automação do fluxo fiscal/DP, com integração de dados, alertas automáticos e controle de permissões por perfil.
+
 ---
+
 # 2. Elicitação de Requisitos
+
 > No seu relatório, você deve separar o que o sistema faz (Funcionais) de como ele deve ser (Não Funcionais).
 
-## Requisitos Funcionais (RF):
-- RF01 - Captura de Notas: O sistema deve importar notas fiscais (emitidas, canceladas e substituídas). 
+## Requisitos Funcionais (RF)
+
+- RF01 - Captura de Notas: O sistema deve importar notas fiscais (emitidas, canceladas e substituídas).
 <br>
 - RF02 - Cálculo de Impostos: O sistema deve calcular impostos devidos e retidos automaticamente.
 <br>
@@ -19,9 +26,10 @@
 <br>
 - RF05 - Controle de Acesso: O sistema deve restringir acesso por cargo (Estagiário, Fiscal, RH, Sócios).
 
-## Requisitos Não Funcionais (RNF):
+## Requisitos Não Funcionais (RNF)
+
 - RNF01 - Segurança/LGPD: O sistema deve manter logs de alteração e backup automático.
-<br> 
+<br>
 - RNF02 - Disponibilidade: Por ser um serviço crítico, deve estar acessível em nuvem.
 <br>
 - RNF03 - Legalidade: O sistema deve estar em conformidade com as normas do CFC e Receita Federal.
@@ -38,6 +46,7 @@
 - ***Casos de Uso Principais:*** "Importar Notas", "Gerar Guia de Imposto", "Emitir Alerta de Vencimento", "Visualizar Balancete".
 
 > [!WARNING] ATENÇÃO
+>
 > - ***Esta parte não está completa, é necessário fazer o diagrama de caso do nosso PI. Lembrando de quem pegar esta função é necessário saber as Entradas/Saídas/Telas etc...***
 
 ---
@@ -45,6 +54,7 @@
 # 4. Análise de Riscos (Segunda Fase do Modelo Cascata)
 
 > [!WARNING] ATENÇÃO
+>
 > - ***É Necessário realizar a avaliação desta parte, lembrando que deve ser colocado na balança Risco Financeiro, Leis e Conhecimento técnico.***
 > - ***Quem Ficar responsável avalie outros possíveis riscos***
 
@@ -61,6 +71,7 @@
 ---
 
 > [!NOTE] Comentário (Lucas Neves Fregnani)
+>
 > - Este contúdo foi gerado por I.A e 'Corrigido' por mim, com o breve conhecimento que tenho **TODOS OS MEMBROS DO GRUPO** devem ler, entender e avaliar se isto está coerente.
 > - Este arquivo vai ser usado para realização do relatório e documentação do projeto
 
@@ -70,4 +81,3 @@
 > Entre neste link [Sintaxe_Base_Markdown](https://docs.github.com/pt/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax) e aprenda a formatar um arquivo markdown, tanto para editar este arquivo quanto para editar nosso 'README.md' do projeto
 
 ---
-

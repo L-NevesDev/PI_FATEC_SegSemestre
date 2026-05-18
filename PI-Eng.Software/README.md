@@ -48,7 +48,7 @@ A **Sabor & Magia** é uma confeitaria de pequeno porte sediada em São Paulo, o
 ---
 
 ## Técnica de Levantamento de Requisitos
-
+s
 ### Técnica Utilizada: Entrevista
 
 A técnica escolhida para o levantamento de requisitos foi a **Entrevista Semiestruturada**, conduzida diretamente com Leonor e Júnior. As perguntas foram organizadas em cinco blocos temáticos:

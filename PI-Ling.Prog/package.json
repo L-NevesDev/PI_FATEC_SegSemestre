@@ -4,6 +4,7 @@
   "description": "> Leia este guia **completamente** antes de começar a trabalhar no projeto.",
   "main": "index.js",
   "scripts": {
+    "dev": "tsx src/server.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -18,13 +19,16 @@
   },
   "homepage": "https://github.com/L-NevesDev/Projeto_Interdisciplinar_Ling.Prog#readme",
   "dependencies": {
+    "better-sqlite3": "^12.10.0",
     "express": "^5.2.1",
     "swagger-ui-express": "^5.0.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^5.0.6",
-    "@types/node": "^25.7.0",
+    "@types/node": "^25.9.1",
+    "@types/sqlite3": "^3.1.11",
     "@types/swagger-ui-express": "^4.1.8",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3"

@@ -1,3 +1,9 @@
+//Lucas fez esta parte
+//Fiz algumas alterações para validar o telefone,
+//Agora o telefone é uma string OBRIGATÓRIA,
+//com um mínimo de 10 caracteres (incluindo DDD) e um máximo de 12 caracteres (incluindo DDD),
+//e deve conter apenas números (sem espaços, traços ou parênteses).
+
 import { z } from "zod";
 
 export const ClienteSchema = z.object({

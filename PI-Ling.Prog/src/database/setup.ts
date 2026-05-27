@@ -7,6 +7,16 @@ const db: DatabaseType = new Database(DB_PATH);
 
 // Murilo aqui! Exclui a tabela de usuários porque ela já não faz mais parte do nosso banco conceitual
 // Alterei os campos "ativo" e "telefone" do Funcionário como NOT NULL para deixá-los como uma entrada obrigatória
+
+
+/*Jefferson - Tabela Pedido alterado para se adequar ao novo modelo do Banco Fisico
+Tabela ProdutoPronto apagada, é o que fazia ligação entre estoque e item_pedido
+funcionamento atual dessas duas tabelas acaba sendo outro
+Tabela Entrega alterada para se adequar ao novo modelo do Banco Fisico
+Tabela Item_Pedido alterada para se adequar ao novo modelo do Banco fisico
+Tabela Item_Pedido_Adicional adicionada, tabela referente ao atributo multivalador adicional
+e valor adicional
+*/
 db.pragma("foreign_keys = ON");
 
 db.exec(`-- Ativar suporte a Chaves Estrangeiras no SQLite
@@ -80,14 +90,7 @@ CREATE TABLE IF NOT EXISTS Estoque (
     FOREIGN KEY (id_produto) REFERENCES Produto(id_produto) ON DELETE RESTRICT
 );
 
--- 8. Produto_Pronto
-CREATE TABLE IF NOT EXISTS Produto_Pronto (
-    id_produto_pronto INTEGER PRIMARY KEY AUTOINCREMENT,
-    id_estoque INTEGER NOT NULL,
-    quantidade INTEGER NOT NULL,
-    disponivel_venda INTEGER DEFAULT 1,
-    FOREIGN KEY (id_estoque) REFERENCES Estoque(id_estoque) ON DELETE RESTRICT
-);
+
 
 -- 9. Cliente
 CREATE TABLE IF NOT EXISTS Cliente (
@@ -107,43 +110,58 @@ CREATE TABLE IF NOT EXISTS Funcionario (
     data_admissao TEXT NOT NULL
 );
 
--- 12. Pedido
-CREATE TABLE IF NOT EXISTS Pedido (
+
+-- Pedido
+CREATE TABLE Pedido (
     id_pedido INTEGER PRIMARY KEY AUTOINCREMENT,
+    data_pedido TEXT DEFAULT CURRENT_TIMESTAMP,
+    data_entrega TEXT,
+    status_pedido TEXT NOT NULL,
+    valor_total NUMERIC DEFAULT 0.00,
+    observacoes TEXT,
     id_cliente INTEGER NOT NULL,
     id_funcionario INTEGER NOT NULL,
-    data_pedido TEXT,
-    data_entrega TEXT NOT NULL,
-    status_pedido TEXT NOT NULL,
-    valor_total REAL NOT NULL,
-    observacoes TEXT,
-    FOREIGN KEY (id_cliente) REFERENCES Cliente(id_cliente) ON DELETE RESTRICT,
-    FOREIGN KEY (id_funcionario) REFERENCES Funcionario(id_funcionario) ON DELETE RESTRICT
+    FOREIGN KEY (id_cliente) REFERENCES Cliente (id_cliente) ON DELETE RESTRICT,
+    FOREIGN KEY (id_funcionario) REFERENCES Funcionario (id_funcionario) ON DELETE RESTRICT
 );
 
--- 13. Entrega
-CREATE TABLE IF NOT EXISTS Entrega (
+
+-- Entrega
+CREATE TABLE Entrega (
     id_entrega INTEGER PRIMARY KEY AUTOINCREMENT,
-    id_pedido INTEGER UNIQUE NOT NULL,
+    nome_recebedor TEXT,
     endereco_entrega TEXT NOT NULL,
-    nome_recebedor TEXT NOT NULL,
-    valor_entrega REAL DEFAULT 0.0,
+    valor_entrega NUMERIC DEFAULT 0.00,
     status_entrega TEXT NOT NULL,
-    FOREIGN KEY (id_pedido) REFERENCES Pedido(id_pedido) ON DELETE CASCADE
+    id_pedido INTEGER NOT NULL UNIQUE,
+    FOREIGN KEY (id_pedido) REFERENCES Pedido (id_pedido) ON DELETE CASCADE
 );
 
--- 14. Item_Pedido
-CREATE TABLE IF NOT EXISTS Item_Pedido (
+
+-- Item_Pedido 
+CREATE TABLE Item_Pedido (
     id_item_pedido INTEGER PRIMARY KEY AUTOINCREMENT,
+    quantidade INTEGER NOT NULL CHECK (quantidade > 0),
+    valor_unitario NUMERIC NOT NULL,
+    subtotal NUMERIC NOT NULL, -- (quantidade * valor_unitario)
     id_pedido INTEGER NOT NULL,
-    id_produto_pronto INTEGER NOT NULL,
-    quantidade INTEGER NOT NULL,
-    valor_unitario REAL NOT NULL,
-    subtotal REAL NOT NULL,
-    FOREIGN KEY (id_pedido) REFERENCES Pedido(id_pedido) ON DELETE CASCADE,
-    FOREIGN KEY (id_produto_pronto) REFERENCES Produto_Pronto(id_produto_pronto) ON DELETE RESTRICT
+    id_estoque INTEGER NOT NULL,
+    FOREIGN KEY (id_pedido) REFERENCES Pedido (id_pedido) ON DELETE CASCADE,
+    FOREIGN KEY (id_estoque) REFERENCES Estoque (id_estoque) ON DELETE RESTRICT
 );
+
+-- Item_Pedido_Adicional (atributo multivalorado)
+CREATE TABLE Item_Pedido_Adicional (
+    id_item_adicional INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome_adicional TEXT NOT NULL,      
+    preco_adicional NUMERIC DEFAULT 0.00, -- Preço cobrado por adicional específico
+    id_item_pedido INTEGER NOT NULL,    
+    FOREIGN KEY (id_item_pedido) REFERENCES Item_Pedido (id_item_pedido) ON DELETE CASCADE
+);
+
+
+
 `);
 
-console.log("✅ Banco de dados criado com sucesso em:", DB_PATH);
+console.log("Banco de dados criado em:", DB_PATH);
 db.close();

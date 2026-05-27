@@ -1,11 +1,20 @@
+/*Jefferson - Referencias que antes eram ao id_produto_pronto agora é ao id_estoque
+Agora ta cotando a item_pedido_adicional
+Desconto do estoque foi implementado também,antes era em produto_pronto
+
+*/
 import db from "../database/connection";
 import type { PedidoInput } from "../schemas/pedido.schema";
 
 export const pedidoRepository = {
 
   listarTodos: () => {
+    // trazer nome do cliente e funcionário
     return db.prepare(`
-      SELECT p.*, c.nome as cliente_nome, f.nome as funcionario_nome
+      SELECT
+        p.*,
+        c.nome AS cliente_nome,
+        f.nome AS funcionario_nome
       FROM Pedido p
       JOIN Cliente c ON c.id_cliente = p.id_cliente
       JOIN Funcionario f ON f.id_funcionario = p.id_funcionario
@@ -15,7 +24,7 @@ export const pedidoRepository = {
 
   buscarPorId: (id: number) => {
     const pedido = db.prepare(`
-      SELECT p.*, c.nome as cliente_nome
+      SELECT p.*, c.nome AS cliente_nome
       FROM Pedido p
       JOIN Cliente c ON c.id_cliente = p.id_cliente
       WHERE p.id_pedido = ?
@@ -23,28 +32,48 @@ export const pedidoRepository = {
 
     if (!pedido) return undefined;
 
-    // Busca os itens do pedido separadamente
+    // Busca itens do pedido
     const itens = db.prepare(`
-      SELECT ip.*, pr.id_estoque
+      SELECT
+        ip.*,
+        e.lote,
+        prod.nome_produto
       FROM Item_Pedido ip
-      JOIN Produto_Pronto pr ON pr.id_produto_pronto = ip.id_produto_pronto
+      JOIN Estoque e ON e.id_estoque = ip.id_estoque
+      JOIN Produto prod ON prod.id_produto = e.id_produto
       WHERE ip.id_pedido = ?
     `).all(id);
 
-    return { ...(pedido as object), itens };
+    // busca adicionais de cada item
+    const itensComAdicionais = (itens as any[]).map(item => {
+      const adicionais = db.prepare(
+        "SELECT * FROM Item_Pedido_Adicional WHERE id_item_pedido = ?"
+      ).all(item.id_item_pedido);
+      return { ...item, adicionais };
+    });
+
+    return { ...(pedido as object), itens: itensComAdicionais };
   },
 
   criar: (dados: PedidoInput) => {
-    // TRANSAÇÃO: pedido + itens + entrega tudo junto
+    /* db.transaction() é pra tudo acontecer junto
+    Se qualquer coisa falhar da rollback automático*/
     const transacao = db.transaction(() => {
-      // Calcula o valor total
+
+      // Calcula o valor total (itens + entrega)
       const totalItens = dados.itens.reduce(
         (soma, item) => soma + item.quantidade * item.valor_unitario, 0
       );
+      const totalAdicionais = dados.itens.reduce((soma, item) => {
+        const somaAdicionais = (item.adicionais ?? []).reduce(
+          (s, ad) => s + ad.preco_adicional, 0
+        );
+        return soma + somaAdicionais;
+      }, 0);
       const valorEntrega = dados.entrega?.valor_entrega ?? 0;
-      const valor_total = totalItens + valorEntrega;
+      const valor_total = totalItens + totalAdicionais + valorEntrega;
 
-      // 1. Insere o pedido
+      // Insere pedido principal
       const pedidoResult = db.prepare(`
         INSERT INTO Pedido (id_cliente, id_funcionario, data_pedido, data_entrega, status_pedido, valor_total, observacoes)
         VALUES (@id_cliente, @id_funcionario, @data_pedido, @data_entrega, @status_pedido, @valor_total, @observacoes)
@@ -60,34 +89,59 @@ export const pedidoRepository = {
 
       const id_pedido = Number(pedidoResult.lastInsertRowid);
 
-      // 2. Insere cada item e desconta do Produto_Pronto
+      // queries pra ser reutilizadas no loop
       const insItem = db.prepare(`
-        INSERT INTO Item_Pedido (id_pedido, id_produto_pronto, quantidade, valor_unitario, subtotal)
+        INSERT INTO Item_Pedido (id_pedido, id_estoque, quantidade, valor_unitario, subtotal)
         VALUES (?, ?, ?, ?, ?)
       `);
-      const atualizaEstoque = db.prepare(`
-        UPDATE Produto_Pronto SET quantidade = quantidade - ?
-        WHERE id_produto_pronto = ?
+      const descontaEstoque = db.prepare(`
+        UPDATE Estoque SET quantidade_disponivel = quantidade_disponivel - ?
+        WHERE id_estoque = ?
+      `);
+      const insAdicional = db.prepare(`
+        INSERT INTO Item_Pedido_Adicional (id_item_pedido, nome_adicional, preco_adicional)
+        VALUES (?, ?, ?)
       `);
 
+      // Insere cada item e desconta do estoque
       dados.itens.forEach(item => {
         const subtotal = item.quantidade * item.valor_unitario;
-        insItem.run(id_pedido, item.id_produto_pronto, item.quantidade, item.valor_unitario, subtotal);
-        atualizaEstoque.run(item.quantidade, item.id_produto_pronto); // baixa o estoque
+
+        const itemResult = insItem.run(
+          id_pedido,
+          item.id_estoque,
+          item.quantidade,
+          item.valor_unitario,
+          subtotal
+        );
+        const id_item_pedido = Number(itemResult.lastInsertRowid);
+
+        // Desconta quantidade do estoque
+        descontaEstoque.run(item.quantidade, item.id_estoque);
+
+        //Insere adicionais desse item (se tiver)
+        (item.adicionais ?? []).forEach(ad => {
+          insAdicional.run(id_item_pedido, ad.nome_adicional, ad.preco_adicional);
+        });
       });
 
-      // 3. Se tiver entrega, registra
+      // Se tiver entrega, registra na tabela Entrega
       if (dados.entrega) {
         db.prepare(`
-          INSERT INTO Entrega (id_pedido, endereco_entrega, nome_recebedor, valor_entrega, status_entrega)
-          VALUES (?, @endereco_entrega, @nome_recebedor, @valor_entrega, 'AGUARDANDO')
-        `).run(id_pedido, dados.entrega);
+          INSERT INTO Entrega (id_pedido, nome_recebedor, endereco_entrega, valor_entrega, status_entrega)
+          VALUES (?, ?, ?, ?, 'AGUARDANDO')
+        `).run(
+          id_pedido,
+          dados.entrega.nome_recebedor ?? null,
+          dados.entrega.endereco_entrega,
+          dados.entrega.valor_entrega
+        );
       }
 
       return { id_pedido, valor_total, status_pedido: "PENDENTE" };
     });
 
-    return transacao();
+    return transacao(); 
   },
 
   atualizarStatus: (id: number, status: string): void => {

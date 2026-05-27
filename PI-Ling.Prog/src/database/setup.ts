@@ -42,7 +42,6 @@ CREATE TABLE IF NOT EXISTS Produto (
     descricao TEXT,
     preco_base REAL NOT NULL,
     preco_kg REAL,
-    quantidade_fatias INTEGER,
     ativo INTEGER DEFAULT 1,
     FOREIGN KEY (id_categoria) REFERENCES CategoriaProduto(id_categoria) ON DELETE RESTRICT
 );

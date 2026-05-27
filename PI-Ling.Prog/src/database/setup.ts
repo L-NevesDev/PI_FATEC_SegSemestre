@@ -5,9 +5,10 @@ import path from "path";
 const DB_PATH = path.join(__dirname, "../../data/pi_saborEmagia.db");
 const db: DatabaseType = new Database(DB_PATH);
 
+// Murilo aqui! Exclui a tabela de usuários porque ela já não faz mais parte do nosso banco conceitual
+// Alterei os campos "ativo" e "telefone" do Funcionário como NOT NULL para deixá-los como uma entrada obrigatória
 db.pragma("foreign_keys = ON");
 
-// Cola aqui TODO o seu SQL do banco (o mesmo arquivo que você já tem)
 db.exec(`-- Ativar suporte a Chaves Estrangeiras no SQLite
 PRAGMA foreign_keys = ON;
 
@@ -97,21 +98,10 @@ CREATE TABLE IF NOT EXISTS Cliente (
 CREATE TABLE IF NOT EXISTS Funcionario (
     id_funcionario INTEGER PRIMARY KEY AUTOINCREMENT,
     nome TEXT NOT NULL,
-    telefone TEXT,
+    telefone TEXT NOT NULL,
     cargo TEXT NOT NULL,
-    ativo INTEGER DEFAULT 1,
+    ativo INTEGER NOT NULL DEFAULT 1,
     data_admissao TEXT NOT NULL
-);
-
--- 11. Usuario
-CREATE TABLE IF NOT EXISTS Usuario (
-    id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,
-    id_funcionario INTEGER UNIQUE NOT NULL,
-    usuario TEXT NOT NULL,
-    senha_hash TEXT NOT NULL,
-    nivel_acesso TEXT NOT NULL,
-    ultimo_login TEXT,
-    FOREIGN KEY (id_funcionario) REFERENCES Funcionario(id_funcionario) ON DELETE CASCADE
 );
 
 -- 12. Pedido

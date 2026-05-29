@@ -17,9 +17,10 @@ export const categoriaProdutoRepository = {
     const resultado = db.prepare(`
       INSERT INTO CategoriaProduto (nome, descricao)
       VALUES (@nome, @descricao)
-    `).run(dados);
+    `).run({ descricao: null, ...dados });
     return { id_categoria: Number(resultado.lastInsertRowid), ...dados };
   },
+
 
   atualizar: (id: number, dados: Partial<Omit<CategoriaProduto, "id_categoria">>): void => {
     db.prepare(`
@@ -27,11 +28,10 @@ export const categoriaProdutoRepository = {
         nome      = COALESCE(@nome, nome),
         descricao = COALESCE(@descricao, descricao)
       WHERE id_categoria = @id
-    `).run({ ...dados, id });
+    `).run({ nome: null, descricao: null, ...dados, id });
   },
 
   deletar: (id: number): boolean => {
-    // banco tem ON DELETE RESTRICT — se tiver produto vinculado a essa categoria, o SQLite vai rejeitar a exclusão
     try {
       const resultado = db.prepare(
         "DELETE FROM CategoriaProduto WHERE id_categoria = ?"

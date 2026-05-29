@@ -37,10 +37,13 @@ export const produtoRepository = {
   criar: (dados: Omit<Produto, "id_produto" | "ativo">, recheios: number[], coberturas: number[]): Produto => {
     // db.transaction() garante que tudo isso acontece junto ou nada acontece
     const transacao = db.transaction(() => {
+      // Lucas: removida coluna "quantidade_fatias" do INSERT — coluna não existe na tabela (foi retirada no setup.ts)
+      // Lucas: adicionado "{ descricao: null, preco_kg: null, ...dados }" no .run() para evitar o erro
+      // "Missing named parameter" do better-sqlite3 quando campos opcionais não são enviados na requisição
       const resultado = db.prepare(`
-        INSERT INTO Produto (id_categoria, nome_produto, descricao, preco_base, preco_kg, quantidade_fatias, ativo)
-        VALUES (@id_categoria, @nome_produto, @descricao, @preco_base, @preco_kg, @quantidade_fatias, 1)
-      `).run(dados);
+        INSERT INTO Produto (id_categoria, nome_produto, descricao, preco_base, preco_kg, ativo)
+        VALUES (@id_categoria, @nome_produto, @descricao, @preco_base, @preco_kg, 1)
+      `).run({ descricao: null, preco_kg: null, ...dados });
 
       const id_produto = Number(resultado.lastInsertRowid);
 

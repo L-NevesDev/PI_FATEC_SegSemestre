@@ -1,5 +1,6 @@
 import db from "../database/connection";
-import type { Cliente, ClienteSchema } from "../schemas/cliente.schema";
+// Lucas: removido "ClienteSchema" do import — é um objeto Zod, não um tipo, e não era usado no repository
+import type { Cliente } from "../schemas/cliente.schema";
 
 export const clienteRepository = {
 
@@ -15,15 +16,19 @@ export const clienteRepository = {
 
   criar: (dados: Omit<Cliente, "id_cliente" | "data_cadastro">): Cliente => {
     const data_cadastro = new Date().toISOString().substring(0, 10);
+    // Lucas: adicionado "email: null" como default antes do spread para evitar "Missing named parameter"
+    // do better-sqlite3 quando o campo opcional "email" não é enviado na requisição
     const resultado = db.prepare(`
       INSERT INTO Cliente (nome, cpf, telefone, email, endereco, data_cadastro)
       VALUES (@nome, @cpf, @telefone, @email, @endereco, @data_cadastro)
-    `).run({ ...dados, data_cadastro });
+    `).run({ email: null, ...dados, data_cadastro });
 
     return { id_cliente: Number(resultado.lastInsertRowid), data_cadastro, ...dados };
   },
 
   atualizar: (id: number, dados: Partial<Omit<Cliente, "id_cliente" | "data_cadastro">>): void => {
+    // Lucas: adicionado defaults null para todos os campos antes do spread — evita "Missing named parameter"
+    // do better-sqlite3 em updates parciais (PUT com apenas alguns campos preenchidos)
     db.prepare(`
       UPDATE Cliente SET
         nome     = COALESCE(@nome,     nome),
@@ -32,7 +37,7 @@ export const clienteRepository = {
         email    = COALESCE(@email,    email),
         endereco = COALESCE(@endereco, endereco)
       WHERE id_cliente = @id
-    `).run({ ...dados, id });
+    `).run({ nome: null, cpf: null, telefone: null, email: null, endereco: null, ...dados, id });
   },
 
   deletar: (id: number): boolean => {

@@ -1,8 +1,12 @@
 import Database from "better-sqlite3";
 import type { Database as DatabaseType } from "better-sqlite3";
-import path from "path";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 
-const DB_PATH = path.join(__dirname, "../../data/pi_saborEmagia.db");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const DB_PATH = join(__dirname, "../../data/pi_saborEmagia.db");
 const db: DatabaseType = new Database(DB_PATH);
 
 // Murilo aqui! Exclui a tabela de usuários porque ela já não faz mais parte do nosso banco conceitual
@@ -108,12 +112,14 @@ CREATE TABLE IF NOT EXISTS Funcionario (
     id_funcionario INTEGER PRIMARY KEY AUTOINCREMENT,
     nome TEXT NOT NULL,
     cargo TEXT NOT NULL,
+    telefone TEXT NOT NULL,
+    ativo INTEGER NOT NULL DEFAULT 1,
     data_admissao TEXT NOT NULL
 );
 
 
 -- Pedido
-CREATE TABLE Pedido (
+CREATE TABLE IF NOT EXISTS Pedido (
     id_pedido INTEGER PRIMARY KEY AUTOINCREMENT,
     data_pedido TEXT DEFAULT CURRENT_TIMESTAMP,
     data_entrega TEXT,
@@ -128,7 +134,7 @@ CREATE TABLE Pedido (
 
 
 -- Entrega
-CREATE TABLE Entrega (
+CREATE TABLE IF NOT EXISTS Entrega (
     id_entrega INTEGER PRIMARY KEY AUTOINCREMENT,
     nome_recebedor TEXT,
     endereco_entrega TEXT NOT NULL,
@@ -139,8 +145,8 @@ CREATE TABLE Entrega (
 );
 
 
--- Item_Pedido 
-CREATE TABLE Item_Pedido (
+-- Item_Pedido
+CREATE TABLE IF NOT EXISTS Item_Pedido (
     id_item_pedido INTEGER PRIMARY KEY AUTOINCREMENT,
     quantidade INTEGER NOT NULL CHECK (quantidade > 0),
     valor_unitario NUMERIC NOT NULL,
@@ -152,7 +158,7 @@ CREATE TABLE Item_Pedido (
 );
 
 -- Item_Pedido_Adicional (atributo multivalorado)
-CREATE TABLE Item_Pedido_Adicional (
+CREATE TABLE IF NOT EXISTS Item_Pedido_Adicional (
     id_item_adicional INTEGER PRIMARY KEY AUTOINCREMENT,
     nome_adicional TEXT NOT NULL,      
     preco_adicional NUMERIC DEFAULT 0.00, -- Preço cobrado por adicional específico

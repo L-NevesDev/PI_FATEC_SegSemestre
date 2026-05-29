@@ -6,7 +6,8 @@ export const ProdutoSchema = z.object({
   descricao: z.string().optional(),
   preco_base: z.number().positive("Preço deve ser positivo"),
   preco_kg: z.number().positive().optional(),
-  quantidade_fatias: z.number().int().positive().optional(),
+  // Lucas: removido campo "quantidade_fatias" pois a coluna não existe na tabela Produto do banco
+  // (setup.ts já havia retirado o campo — manter aqui causaria erro de SQL no INSERT)
   recheios: z.array(z.number().int()).optional(),   // IDs dos recheios
   coberturas: z.array(z.number().int()).optional(), // IDs das coberturas
 });

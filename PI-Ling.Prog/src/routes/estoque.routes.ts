@@ -23,8 +23,14 @@ router.get("/:id", (req, res) => {
   }
 });
 
+// Lucas: adicionado try/catch no POST — sem ele, erros do banco (ex: id_produto inexistente, FK constraint)
+// chegavam como 500 sem mensagem útil; agora retornam 400 com a mensagem de erro correta
 router.post("/", validar(EstoqueSchema), (req, res) => {
-  res.status(201).json(estoqueService.adicionar(req.body));
+  try {
+    res.status(201).json(estoqueService.adicionar(req.body));
+  } catch (err: unknown) {
+    res.status(400).json({ erro: (err as Error).message });
+  }
 });
 
 export default router;

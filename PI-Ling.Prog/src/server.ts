@@ -2,7 +2,9 @@ import express from "express";
 import { errorHandler } from "./middlewares/errorHandler";
 
 
-
+/*Jefferson- Apagado as rotas e correspondentes não mais utilizado (usuarios e produtoPronto)
+Adicionado routes e correspondentes de item pedido adicional
+*/
 // rotas 
 import clienteRoutes from "./routes/cliente.routes";
 import funcionarioRoutes from "./routes/funcionario.routes";
@@ -10,8 +12,8 @@ import produtoRoutes from "./routes/produto.routes";
 import estoqueRoutes from "./routes/estoque.routes";
 import pedidoRoutes from "./routes/pedido.routes";
 import categoriaProdutoRoutes from "./routes/categoriaProduto.routes";
-import usuarioRoutes          from "./routes/usuario.routes";
-import produtoProntoRoutes    from "./routes/produtoPronto.routes";
+import itemPedidoAdicionalRoutes from "./routes/itemPedidoAdicional.routes";
+
 
 const app = express();
 app.use(express.json());
@@ -23,8 +25,8 @@ app.use("/api/produtos",     produtoRoutes);
 app.use("/api/estoque",      estoqueRoutes);
 app.use("/api/pedidos",      pedidoRoutes);
 app.use("/api/categorias",       categoriaProdutoRoutes);
-app.use("/api/usuarios",         usuarioRoutes);
-app.use("/api/produtos-prontos", produtoProntoRoutes);
+app.use("/api/adicionais",   itemPedidoAdicionalRoutes);
+
 
 // Middleware de erros SEMPRE no final
 app.use(errorHandler);
@@ -38,6 +40,6 @@ app.listen(PORT, () => {
   console.log(`   Estoque:      GET http://localhost:${PORT}/api/estoque`);
   console.log(`   Pedidos:      GET http://localhost:${PORT}/api/pedidos`);
   console.log(`   Categorias:   GET http://localhost:${PORT}/api/categorias`);
-  console.log(`   Usuarios:   GET http://localhost:${PORT}/api/usuarios`);
-  console.log(`   Produtos Prontos:   GET http://localhost:${PORT}/api/produtos-prontos\n`);
+  console.log(`   Adicionais:   GET http://localhost:${PORT}/api/adicionais\n`);
+
 });

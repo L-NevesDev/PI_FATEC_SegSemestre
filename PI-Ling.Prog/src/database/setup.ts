@@ -90,14 +90,16 @@ CREATE TABLE IF NOT EXISTS Estoque (
 );
 
 
+-- Lucas:
+-- O campo "cpf" foi adicionado à tabela Cliente.
 
--- 9. Cliente
 CREATE TABLE IF NOT EXISTS Cliente (
     id_cliente INTEGER PRIMARY KEY AUTOINCREMENT,
     nome TEXT NOT NULL,
-    telefone TEXT,
+    cpf TEXT NOT NULL UNIQUE,
+    telefone TEXT NOT NULL,
     email TEXT,
-    endereco TEXT,
+    endereco TEXT NOT NULL,
     data_cadastro TEXT
 );
 

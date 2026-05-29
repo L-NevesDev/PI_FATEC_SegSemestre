@@ -9,26 +9,22 @@ export const clienteService = {
 
   buscarPorId: (id: number): Cliente => {
     const cliente = clienteRepository.buscarPorId(id);
-    // erro se não encontrar (o repository só retorna undefined)
     if (!cliente) throw new Error("Cliente não encontrado");
     return cliente;
   },
 
   criar: (dados: Omit<Cliente, "id_cliente" | "data_cadastro">): Cliente => {
-    return clienteRepository.criar({
-      ...dados,
-      data_cadastro: new Date().toISOString(), // data gerada aqui
-    });
+    return clienteRepository.criar(dados);
   },
 
   atualizar: (id: number, dados: Partial<Omit<Cliente, "id_cliente" | "data_cadastro">>): Cliente => {
-    clienteService.buscarPorId(id); // garante que existe antes de atualizar
+    clienteService.buscarPorId(id);
     clienteRepository.atualizar(id, dados);
-    return clienteService.buscarPorId(id); // retorna o registro atualizado
+    return clienteService.buscarPorId(id);
   },
 
   deletar: (id: number): void => {
-    clienteService.buscarPorId(id); // garante que existe antes de deletar
+    clienteService.buscarPorId(id);
     clienteRepository.deletar(id);
   },
 };

@@ -3,7 +3,7 @@ import { z } from "zod";
 // Lucas:
 // Foi adicionado o campo "cpf";
 // Foi refatorado o telefone para conter somente numeros;
-// O campo "email" e "endereco" foram tornados opcionais.
+// O campo "email" foi trasnformado em opcional.
 
 export const ClienteSchema = z.object({
   nome: z.string().min(2, "Nome deve ter ao menos 2 caracteres"),

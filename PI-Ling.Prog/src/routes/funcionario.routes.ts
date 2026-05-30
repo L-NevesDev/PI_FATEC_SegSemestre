@@ -1,41 +1,47 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express"; // Murilo aqui! Aqui eu adicionei o Request e Response para fazer a tipagem das rotas e evitar erros na hora de rodar
 import { funcionarioService } from "../services/funcionario.service";
 import { validar } from "../middlewares/validar";
 import { FuncionarioSchema } from "../schemas/funcionario.schema";
 
 const router = Router();
 
-router.get("/", (req, res) => {
-  res.json(funcionarioService.listar());
+// Adicionei async e await para que o código seja executado na ordem correta e com todos os dados
+router.get("/", async (req: Request, res: Response) => {
+  const funcionarios = await funcionarioService.listar();
+  res.json(funcionarios);
 });
 
-router.get("/:id", (req, res) => {
+router.get("/:id", async (req: Request<{ id: string }>, res: Response, next) => {
   try {
-    res.json(funcionarioService.buscarPorId(Number(req.params.id)));
-  } catch (err: any) {
-    res.status(404).json({ erro: err.message });
+    const funcionario = await funcionarioService.buscarPorId(Number(req.params.id));
+    res.json(funcionario);
+  } catch (err) {
+    next(err); //também usei next para ficar mais fácil as trativas com erros nas rotas
+    //agora um só lugar faz as trativas com erros
   }
 });
 
-router.post("/", validar(FuncionarioSchema), (req, res) => {
-  res.status(201).json(funcionarioService.criar(req.body));
+router.post("/", validar(FuncionarioSchema), async (req: Request, res: Response) => {
+  const novo = await funcionarioService.criar(req.body);
+  res.status(201).json(novo);
 });
 
-router.put("/:id", validar(FuncionarioSchema.partial()), (req, res) => {
+router.put("/:id", validar(FuncionarioSchema.partial()), async (req: Request<{ id: string }>, res: Response, next) => {
   try {
-    res.json(funcionarioService.atualizar(Number(req.params.id), req.body));
-  } catch (err: any) {
-    res.status(404).json({ erro: err.message });
+    const atualizado = await funcionarioService.atualizar(Number(req.params.id), req.body);
+    res.json(atualizado);
+  } catch (err) {
+    next(err);
   }
 });
 
 // Inativar em vez de deletar
-router.delete("/:id", (req, res) => {
+router.delete("/:id", async (req: Request<{ id:string }>, res: Response, next) => {
   try {
-    funcionarioService.inativar(Number(req.params.id));
+    await funcionarioService.inativar(Number(req.params.id));
     res.status(204).send();
-  } catch (err: any) {
-    res.status(404).json({ erro: err.message });
+  } catch (err) {
+    next(err);
   }
 });
 

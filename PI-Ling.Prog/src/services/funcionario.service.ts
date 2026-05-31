@@ -1,5 +1,6 @@
 import { funcionarioRepository } from "../repositories/funcionario.repository";
-import type { Funcionario } from "../schemas/funcionario.schema";
+import type { Funcionario, FuncionarioInput } from "../schemas/funcionario.schema";
+import { AppError } from "../middlewares/errorHandler";
 
 export const funcionarioService = {
 
@@ -9,11 +10,11 @@ export const funcionarioService = {
 
   buscarPorId: (id: number): Funcionario => {
     const funcionario = funcionarioRepository.buscarPorId(id);
-    if (!funcionario) throw new Error("Funcionário não encontrado");
+    if (!funcionario) throw new AppError(404, "Funcionário não encontrado");
     return funcionario;
   },
 
-  criar: (dados: Omit<Funcionario, "id_funcionario">): Funcionario => {
+  criar: (dados: FuncionarioInput): Funcionario => {
     return funcionarioRepository.criar(dados);
   },
 
@@ -26,6 +27,5 @@ export const funcionarioService = {
   inativar: (id: number): void => {
     funcionarioService.buscarPorId(id);
     funcionarioRepository.inativar(id);
-    //não deletamos funcionários, apenas inativamos
   },
 };

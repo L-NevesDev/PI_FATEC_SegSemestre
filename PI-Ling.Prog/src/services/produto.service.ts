@@ -7,25 +7,18 @@ export const produtoService = {
     return produtoRepository.listarTodos();
   },
 
-  buscarPorId: (id: number) => {
+  buscarPorId: (id: number): Produto => {
     const produto = produtoRepository.buscarPorId(id);
     if (!produto) throw new Error("Produto não encontrado");
-
-    // Monta o objeto completo com recheios e coberturas
-    return {
-      ...produto,
-      recheios: produtoRepository.buscarRecheiosDoProduto(id),
-      coberturas: produtoRepository.buscarCoberturasDoProduto(id),
-    };
+    return produto;
   },
 
-  criar: (dados: Omit<Produto, "id_produto" | "ativo"> & { recheios?: number[]; coberturas?: number[] }): Produto => {
-    const { recheios = [], coberturas = [], ...dadosProduto } = dados;
-    return produtoRepository.criar(dadosProduto, recheios, coberturas);
+  criar: (dados: Omit<Produto, "id_produto" | "ativo">): Produto => {
+    return produtoRepository.criar(dados);
   },
 
   inativar: (id: number): void => {
-    produtoService.buscarPorId(id); // verifica se existe
+    produtoService.buscarPorId(id);
     produtoRepository.inativar(id);
   },
 };

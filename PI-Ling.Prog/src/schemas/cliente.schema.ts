@@ -1,10 +1,5 @@
 import { z } from "zod";
 
-// Lucas:
-// Foi adicionado o campo "cpf";
-// Foi refatorado o telefone para conter somente numeros;
-// O campo "email" foi trasnformado em opcional.
-
 export const ClienteSchema = z.object({
   nome: z.string().min(2, "Nome deve ter ao menos 2 caracteres"),
   cpf: z.string()
@@ -14,7 +9,7 @@ export const ClienteSchema = z.object({
     .min(10, "Telefone deve ter no mínimo 10 dígitos (incluindo DDD)")
     .max(12, "Telefone deve ter no máximo 12 dígitos (incluindo DDD)")
     .regex(/^\d+$/, { message: "Telefone deve conter apenas números" }),
-  email: z.string().email("E-mail inválido").optional(),
+  email: z.string().email("E-mail inválido"),
   endereco: z.string().min(5, "Endereço deve ter ao menos 5 caracteres"),
 });
 

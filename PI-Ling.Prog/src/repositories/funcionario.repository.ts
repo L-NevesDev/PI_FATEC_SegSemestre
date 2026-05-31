@@ -1,50 +1,56 @@
 import db from "../database/connection";
-import bcrypt from "bcrypt";
-import type { Funcionario, FuncionarioInput } from "../schemas/funcionario.schema";
+import type { Funcionario } from "../schemas/funcionario.schema";
+import { AppError, errorHandler } from "../middlewares/errorHandler";
+import { error } from "node:console";
 
-const COLUNAS_PUBLICAS = "id_funcionario, nome, email, data_admissao, cargo, telefone, ativo";
+// Murilo aqui! Alterei as querys e deixei elas separadas para que elas sejam preparadas apenas uma vez quando o server iniciar
+// Alterei também as operações do repository com o return de statements
+const statements = {
+  listarTodos: db.prepare("SELECT * FROM Funcionario WHERE ativo = 1"),
+  buscarPorId: db.prepare("SELECT * FROM Funcionario WHERE id_funcionario = ?"),
+  criar: db.prepare(`
+    INSERT INTO Funcionario (nome, telefone, cargo, ativo, data_admissao)
+    VALUES (@nome, @telefone, @cargo, @ativo, @data_admissao)`),
+
+    atualizar: db.prepare(`
+      UPDATE Funcionario SET
+      nome = COALESCE(@nome, nome),
+      telefone = COALESCE(@telefone, telefone),
+      cargo = COALESCE(@cargo, cargo),
+      ativo = COALESCE(@ativo, ativo)
+      WHERE id_funcionario = @id)
+      `),
+      inativar: db.prepare("UPDATE Funcionario SET ativo = 0 WHERE id_funcionario = ?"),
+};
 
 export const funcionarioRepository = {
 
   listarTodos: (): Funcionario[] => {
-    return db.prepare(
-      `SELECT ${COLUNAS_PUBLICAS} FROM Funcionario WHERE ativo = 1`
-    ).all() as Funcionario[];
+    return statements.listarTodos.all() as Funcionario[];
   },
 
   buscarPorId: (id: number): Funcionario | undefined => {
-    return db.prepare(
-      `SELECT ${COLUNAS_PUBLICAS} FROM Funcionario WHERE id_funcionario = ?`
-    ).get(id) as Funcionario | undefined;
+    return statements.buscarPorId.get(id) as Funcionario | undefined;
   },
 
-  criar: (dados: FuncionarioInput): Funcionario => {
-    const { senha, ...dadosPublicos } = dados;
-    const senha_hash = bcrypt.hashSync(senha, 10);
-
-    const resultado = db.prepare(`
-      INSERT INTO Funcionario (nome, email, senha_hash, data_admissao, cargo, telefone, ativo)
-      VALUES (@nome, @email, @senha_hash, @data_admissao, @cargo, @telefone, @ativo)
-    `).run({ ...dadosPublicos, senha_hash });
-
-    return { id_funcionario: Number(resultado.lastInsertRowid), ...dadosPublicos };
+  criar: (dados: Omit<Funcionario, "id_funcionario">): Funcionario => {
+    const resultado = statements.criar.run(dados);
+    return { id_funcionario: Number(resultado.lastInsertRowid), ...dados };
   },
 
   atualizar: (id: number, dados: Partial<Omit<Funcionario, "id_funcionario">>): void => {
-    db.prepare(`
-      UPDATE Funcionario SET
-        nome     = COALESCE(@nome,     nome),
-        email    = COALESCE(@email,    email),
-        telefone = COALESCE(@telefone, telefone),
-        cargo    = COALESCE(@cargo,    cargo),
-        ativo    = COALESCE(@ativo,    ativo)
-      WHERE id_funcionario = @id
-    `).run({ nome: null, email: null, telefone: null, cargo: null, ativo: null, ...dados, id });
+    const resultado = statements.atualizar.run({ ...dados, id });
+
+    if (resultado.changes === 0) {
+      throw new AppError(400, "Funcionário não encontrado");
+    }
   },
 
   inativar: (id: number): void => {
-    db.prepare(
-      "UPDATE Funcionario SET ativo = 0 WHERE id_funcionario = ?"
-    ).run(id);
+   const resultado = statements.inativar.run(id);
+
+   if(resultado.changes === 0) {
+    throw new AppError(404, "Funcionário não encontrado");
+   }
   },
 };

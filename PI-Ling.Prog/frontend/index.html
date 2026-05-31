@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sabor & Magia — CRM</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+  <span>🎂</span>
+  <div>
+    <p class="sidebar-title">Sabor & Magia</p>
+    <p class="sidebar-sub">Sistema de gestão</p>
+  </div>
+</div>
+
+<nav class="sidebar-nav">
+  <a href="#" class="nav-item active" data-page="clientes">👥 Clientes</a>
+  <a href="#" class="nav-item" data-page="produtos">🎂 Produtos</a>
+  <a href="#" class="nav-item" data-page="estoque">📦 Estoque</a>
+  <a href="#" class="nav-item" data-page="pedidos">📋 Pedidos</a>
+</nav>
+
+<div class="sidebar-footer">
+  <p>FATEC Indaiatuba</p>
+  <p>ADS 2º Período</p>
+</div>
+  </aside>
+
+  <main class="content">
+    <section id="page-clientes" class="page active">
+
+  <div class="page-header">
+    <div>
+      <h1>Clientes</h1>
+      <p class="page-sub">Gerencie os clientes da confeitaria</p>
+    </div>
+    <button class="btn-primary">+ Novo cliente</button>
+  </div>
+
+  <div class="table-box">
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Telefone</th>
+          <th>Email</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-clientes">
+        <tr>
+          <td colspan="4" class="empty">Carregando...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</section>
+  </main>
+
+</div>
+</body>
+</html>

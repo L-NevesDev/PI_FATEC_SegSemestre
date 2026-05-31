@@ -1,0 +1,151 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #F5F5F5;
+  color: #1A1A1A;
+}
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: #1A1A1A;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1;
+  padding: 2rem;
+  background: #F5F5F5;
+}
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 1.25rem 1rem;
+  border-bottom: 1px solid #333;
+}
+
+.sidebar-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.sidebar-sub {
+  font-size: 11px;
+  color: #888;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 0;
+  flex: 1;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 1rem;
+  font-size: 13px;
+  color: #888;
+  text-decoration: none;
+}
+
+.nav-item:hover {
+  background: #2A2A2A;
+  color: #CCC;
+}
+
+.nav-item.active {
+  background: #F8D7DA;
+  color: #1A1A1A;
+  font-weight: 500;
+}
+
+.sidebar-footer {
+  padding: 1rem;
+  border-top: 1px solid #333;
+  font-size: 11px;
+  color: #555;
+  line-height: 1.6;
+}
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.page-header h1 {
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.page-sub {
+  font-size: 13px;
+  color: #888;
+  margin-top: 2px;
+}
+
+.btn-primary {
+  background: #1A1A1A;
+  color: #FFF;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  opacity: 0.85;
+}
+
+.table-box {
+  background: #FFF;
+  border: 0.5px solid #E0E0E0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+thead tr {
+  background: #F5F5F5;
+}
+
+th {
+  padding: 10px 16px;
+  text-align: left;
+  font-weight: 500;
+  color: #888;
+}
+
+td {
+  padding: 10px 16px;
+  border-top: 0.5px solid #E0E0E0;
+  color: #1A1A1A;
+}
+
+td.empty {
+  color: #888;
+  text-align: center;
+  padding: 2rem;
+}

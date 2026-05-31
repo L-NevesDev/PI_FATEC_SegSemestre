@@ -21,100 +21,69 @@ Tabela Item_Pedido alterada para se adequar ao novo modelo do Banco fisico
 Tabela Item_Pedido_Adicional adicionada, tabela referente ao atributo multivalador adicional
 e valor adicional
 */
+
+
+/* Jefferson 2- Banco agora está inteiro fazendo jus ao novo modelo físico */
 db.pragma("foreign_keys = ON");
 
-db.exec(`-- Ativar suporte a Chaves Estrangeiras no SQLite
+db.exec(`
 PRAGMA foreign_keys = ON;
 
--- 1. CategoriaProduto
-CREATE TABLE IF NOT EXISTS CategoriaProduto (
+-- CategoriaProduto
+CREATE TABLE CategoriaProduto (
     id_categoria INTEGER PRIMARY KEY AUTOINCREMENT,
     nome TEXT NOT NULL,
     descricao TEXT
 );
 
--- 2. Produto
-CREATE TABLE IF NOT EXISTS Produto (
+-- Produto
+CREATE TABLE Produto (
     id_produto INTEGER PRIMARY KEY AUTOINCREMENT,
-    id_categoria INTEGER NOT NULL,
     nome_produto TEXT NOT NULL,
     descricao TEXT,
-    preco_base REAL NOT NULL,
-    preco_kg REAL,
+    preco_base NUMERIC NOT NULL,
+    preco_kg NUMERIC,
     ativo INTEGER DEFAULT 1,
-    FOREIGN KEY (id_categoria) REFERENCES CategoriaProduto(id_categoria) ON DELETE RESTRICT
+    id_categoria INTEGER NOT NULL,
+    FOREIGN KEY (id_categoria) REFERENCES CategoriaProduto (id_categoria) ON DELETE RESTRICT
 );
 
--- 3. Recheio
-CREATE TABLE IF NOT EXISTS Recheio (
-    id_recheio INTEGER PRIMARY KEY AUTOINCREMENT,
-    nome_recheio TEXT NOT NULL,
-    valor_adicional REAL DEFAULT 0.0
-);
-
--- 4. Cobertura
-CREATE TABLE IF NOT EXISTS Cobertura (
-    id_cobertura INTEGER PRIMARY KEY AUTOINCREMENT,
-    nome_cobertura TEXT NOT NULL,
-    valor_adicional REAL DEFAULT 0.0
-);
-
--- 5. Aux_Prod_Recheio
-CREATE TABLE IF NOT EXISTS Aux_Prod_Recheio (
-    id_produto INTEGER,
-    id_recheio INTEGER,
-    PRIMARY KEY (id_produto, id_recheio),
-    FOREIGN KEY (id_produto) REFERENCES Produto(id_produto) ON DELETE CASCADE,
-    FOREIGN KEY (id_recheio) REFERENCES Recheio(id_recheio) ON DELETE CASCADE
-);
-
--- 6. Aux_Prod_Cobertura
-CREATE TABLE IF NOT EXISTS Aux_Prod_Cobertura (
-    id_cobertura INTEGER,
-    id_produto INTEGER,
-    PRIMARY KEY (id_cobertura, id_produto),
-    FOREIGN KEY (id_cobertura) REFERENCES Cobertura(id_cobertura) ON DELETE CASCADE,
-    FOREIGN KEY (id_produto) REFERENCES Produto(id_produto) ON DELETE CASCADE
-);
-
--- 7. Estoque
-CREATE TABLE IF NOT EXISTS Estoque (
+-- Estoque
+CREATE TABLE Estoque (
     id_estoque INTEGER PRIMARY KEY AUTOINCREMENT,
-    id_produto INTEGER NOT NULL,
-    quantidade_disponivel INTEGER NOT NULL,
+    lote TEXT NOT NULL,
     data_producao TEXT NOT NULL,
     data_validade TEXT NOT NULL,
-    lote TEXT NOT NULL,
-    FOREIGN KEY (id_produto) REFERENCES Produto(id_produto) ON DELETE RESTRICT
+    quantidade_disponivel NUMERIC NOT NULL,
+    id_produto INTEGER NOT NULL,
+    FOREIGN KEY (id_produto) REFERENCES Produto (id_produto) ON DELETE CASCADE
 );
 
-
--- Lucas:
--- O campo "cpf" foi adicionado à tabela Cliente.
-
-CREATE TABLE IF NOT EXISTS Cliente (
+--  Cliente
+CREATE TABLE Cliente (
     id_cliente INTEGER PRIMARY KEY AUTOINCREMENT,
     nome TEXT NOT NULL,
-    cpf TEXT NOT NULL UNIQUE,
+   cpf TEXT NOT NULL UNIQUE,
     telefone TEXT NOT NULL,
-    email TEXT,
+    email TEXT UNIQUE NOT NULL,
     endereco TEXT NOT NULL,
-    data_cadastro TEXT
+    data_cadastro TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
--- 10. Funcionario
-CREATE TABLE IF NOT EXISTS Funcionario (
+-- Funcionario
+CREATE TABLE Funcionario (
     id_funcionario INTEGER PRIMARY KEY AUTOINCREMENT,
     nome TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    senha_hash TEXT NOT NULL,
+    data_admissao TEXT NOT NULL,
     cargo TEXT NOT NULL,
-    telefone TEXT NOT NULL,
-    ativo INTEGER NOT NULL DEFAULT 1,
-    data_admissao TEXT NOT NULL
+    telefone TEXT,
+    ativo INTEGER DEFAULT 1
 );
 
-
 -- Pedido
-CREATE TABLE IF NOT EXISTS Pedido (
+CREATE TABLE Pedido (
     id_pedido INTEGER PRIMARY KEY AUTOINCREMENT,
     data_pedido TEXT DEFAULT CURRENT_TIMESTAMP,
     data_entrega TEXT,
@@ -127,9 +96,8 @@ CREATE TABLE IF NOT EXISTS Pedido (
     FOREIGN KEY (id_funcionario) REFERENCES Funcionario (id_funcionario) ON DELETE RESTRICT
 );
 
-
 -- Entrega
-CREATE TABLE IF NOT EXISTS Entrega (
+CREATE TABLE Entrega (
     id_entrega INTEGER PRIMARY KEY AUTOINCREMENT,
     nome_recebedor TEXT,
     endereco_entrega TEXT NOT NULL,
@@ -139,9 +107,8 @@ CREATE TABLE IF NOT EXISTS Entrega (
     FOREIGN KEY (id_pedido) REFERENCES Pedido (id_pedido) ON DELETE CASCADE
 );
 
-
--- Item_Pedido
-CREATE TABLE IF NOT EXISTS Item_Pedido (
+-- Item_Pedido 
+CREATE TABLE Item_Pedido (
     id_item_pedido INTEGER PRIMARY KEY AUTOINCREMENT,
     quantidade INTEGER NOT NULL CHECK (quantidade > 0),
     valor_unitario NUMERIC NOT NULL,
@@ -153,13 +120,21 @@ CREATE TABLE IF NOT EXISTS Item_Pedido (
 );
 
 -- Item_Pedido_Adicional (atributo multivalorado)
-CREATE TABLE IF NOT EXISTS Item_Pedido_Adicional (
+CREATE TABLE Item_Pedido_Adicional (
     id_item_adicional INTEGER PRIMARY KEY AUTOINCREMENT,
     nome_adicional TEXT NOT NULL,      
     preco_adicional NUMERIC DEFAULT 0.00, -- Preço cobrado por adicional específico
     id_item_pedido INTEGER NOT NULL,    
     FOREIGN KEY (id_item_pedido) REFERENCES Item_Pedido (id_item_pedido) ON DELETE CASCADE
 );
+
+-- Índices 
+CREATE INDEX IDX_Pedido_Cliente ON Pedido(id_cliente);
+CREATE INDEX IDX_Item_Pedido_Pedido ON Item_Pedido(id_pedido);
+CREATE INDEX IDX_Estoque_Produto ON Estoque(id_produto);
+CREATE INDEX IDX_Funcionario_Email ON Funcionario(email);
+CREATE INDEX IDX_Adicional_Item_Pedido ON Item_Pedido_Adicional(id_item_pedido);
+
 
 
 

@@ -4,10 +4,12 @@
   "description": "> Leia este guia **completamente** antes de começar a trabalhar no projeto.",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx src/server.ts",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "setup": "tsx src/database/setup.ts"
-  },
+  "dev": "tsx src/server.ts",
+  "test": "echo \"Error: no test specified\" && exit 1",
+  "setup": "tsx src/database/setup.ts",
+  "build": "tsc",
+  "start": "node dist/server.js"
+},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/L-NevesDev/Projeto_Interdisciplinar_Ling.Prog.git"

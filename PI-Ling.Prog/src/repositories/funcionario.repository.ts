@@ -39,11 +39,12 @@ export const funcionarioRepository = {
   buscarPorEmail: (email: string): Funcionario | undefined => {
   return statements.buscarPorEmail.get(email) as Funcionario | undefined;
 },
-
-  criar: (dados: Omit<Funcionario, "id_funcionario">): Funcionario => {
-    const resultado = statements.criar.run(dados);
-    return { id_funcionario: Number(resultado.lastInsertRowid), ...dados };
-  },
+// fix: corrige retorno do criar
+  criar: (dados: Omit<Funcionario, "id_funcionario"> & { senha: string }): Funcionario => {
+  const resultado = statements.criar.run(dados);
+  const { senha, ...dadosSemSenha } = dados;
+  return { id_funcionario: Number(resultado.lastInsertRowid), ...dadosSemSenha };
+},
 
   atualizar: (id: number, dados: Partial<Omit<Funcionario, "id_funcionario">>): void => {
     const resultado = statements.atualizar.run({ ...dados, id });

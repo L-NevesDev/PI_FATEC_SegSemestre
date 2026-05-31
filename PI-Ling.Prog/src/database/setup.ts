@@ -33,11 +33,6 @@ CREATE TABLE IF NOT EXISTS CategoriaProduto (
     descricao TEXT
 );
 
--- Lucas irá mexer aqui,
--- O produto não tem data de criação
--- Retirei o campo "quantidade_fatias" já que isso se encaixa como regra de negocio
--- ou até mesmo cadastro de um produto especifico
-
 -- 2. Produto
 CREATE TABLE IF NOT EXISTS Produto (
     id_produto INTEGER PRIMARY KEY AUTOINCREMENT,

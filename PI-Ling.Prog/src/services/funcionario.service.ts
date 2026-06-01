@@ -1,8 +1,7 @@
 import { funcionarioRepository } from "../repositories/funcionario.repository";
 import type { Funcionario, FuncionarioInput } from "../schemas/funcionario.schema";
 import { AppError } from "../middlewares/errorHandler";
-import bcrypt from "bcrypt"
-import id from "zod/v4/locales/id.js";
+import bcrypt from "bcrypt";
 
 export const funcionarioService = {
 

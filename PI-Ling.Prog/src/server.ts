@@ -1,7 +1,9 @@
 import express from "express";
+import cors from "cors";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./swagger";
 import { errorHandler } from "./middlewares/errorHandler";
+
 
 // rotas
 import clienteRoutes from "./routes/cliente.routes";
@@ -14,6 +16,11 @@ import itemPedidoAdicionalRoutes from "./routes/itemPedidoAdicional.routes";
 
 const app = express();
 app.use(express.json());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Documentação Swagger
 app.get("/api-docs.json", (req, res) => {

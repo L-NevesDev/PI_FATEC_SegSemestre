@@ -7,39 +7,78 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="layout">
+  <div class="layout">
 
-  <aside class="sidebar">
-    <div class="sidebar-header">
-  <span>🎂</span>
-  <div>
-    <p class="sidebar-title">Sabor & Magia</p>
-    <p class="sidebar-sub">Sistema de gestão</p>
-  </div>
-</div>
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <span>🎂</span>
+        <div>
+          <p class="sidebar-title">Sabor & Magia</p>
+          <p class="sidebar-sub">Sistema de gestão</p>
+        </div>
+      </div>
 
-<nav class="sidebar-nav">
-  <a href="#" class="nav-item active" data-page="clientes">👥 Clientes</a>
-  <a href="#" class="nav-item" data-page="produtos">🎂 Produtos</a>
-  <a href="#" class="nav-item" data-page="estoque">📦 Estoque</a>
-  <a href="#" class="nav-item" data-page="pedidos">📋 Pedidos</a>
-</nav>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-page="menu">🏠 Menu Principal</a>
+        <a href="#" class="nav-item" data-page="clientes">👥 Clientes</a>
+        <a href="#" class="nav-item" data-page="produtos">🎂 Produtos</a>
+        <a href="#" class="nav-item" data-page="estoque">📦 Estoque</a>
+        <a href="#" class="nav-item" data-page="pedidos">📋 Pedidos</a>
+      </nav>
 
-<div class="sidebar-footer">
-  <p>FATEC Indaiatuba</p>
-  <p>ADS 2º Período</p>
-</div>
-  </aside>
+      <div class="sidebar-footer">
+        <p>FATEC Indaiatuba</p>
+        <p>ADS 2º Período</p>
+      </div>
+    </aside>
 
-  <main class="content">
-    <section id="page-clientes" class="page active">
+    <main class="content">
 
+      <!-- MENU PRINCIPAL -->
+      <section id="page-menu" class="page active">
+        <div class="page-header">
+          <div>
+            <h1>Menu Principal</h1>
+            <p class="page-sub">Bem-vindo(a) ao Sabor & Magia! Selecione uma opção para continuar</p>
+          </div>
+        </div>
+
+        <div class="cards-menu">
+          <div class="card-menu" onclick="navegarPara('clientes')">
+            <span class="card-menu-icon">👥</span>
+            <h3>Clientes</h3>
+            <p>Gerencie os clientes da confeitaria</p>
+          </div>
+          <div class="card-menu" onclick="navegarPara('produtos')">
+            <span class="card-menu-icon">🎂</span>
+            <h3>Produtos</h3>
+            <p>Gerencie os produtos da confeitaria</p>
+          </div>
+          <div class="card-menu" onclick="navegarPara('estoque')">
+            <span class="card-menu-icon">📦</span>
+            <h3>Estoque</h3>
+            <p>Controle o estoque de produtos</p>
+          </div>
+          <div class="card-menu" onclick="navegarPara('pedidos')">
+            <span class="card-menu-icon">📋</span>
+            <h3>Pedidos</h3>
+            <p>Gerencie os pedidos realizados</p>
+          </div>
+        </div>
+      </section>
+
+<!-- CLIENTES -->
+<section id="page-clientes" class="page">
   <div class="page-header">
     <div>
       <h1>Clientes</h1>
       <p class="page-sub">Gerencie os clientes da confeitaria</p>
     </div>
     <button class="btn-primary">+ Novo cliente</button>
+  </div>
+
+  <div class="search-box">
+    <input type="text" id="busca-clientes" placeholder="🔍 Buscar cliente...">
   </div>
 
   <div class="table-box">
@@ -59,10 +98,96 @@
       </tbody>
     </table>
   </div>
-
 </section>
-  </main>
 
-</div>
+      <!-- PRODUTOS -->
+      <section id="page-produtos" class="page">
+        <div class="page-header">
+          <div>
+            <h1>Produtos</h1>
+            <p class="page-sub">Catálogo de produtos da confeitaria</p>
+          </div>
+          <button class="btn-primary">+ Novo produto</button>
+        </div>
+        <div class="table-box">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Categoria</th>
+                <th>Preço base</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-produtos">
+              <tr>
+                <td colspan="4" class="empty">Carregando...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ESTOQUE -->
+      <section id="page-estoque" class="page">
+        <div class="page-header">
+          <div>
+            <h1>Estoque</h1>
+            <p class="page-sub">Controle de lotes e validade</p>
+          </div>
+          <button class="btn-primary">+ Adicionar lote</button>
+        </div>
+        <div class="table-box">
+          <table>
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Lote</th>
+                <th>Quantidade</th>
+                <th>Validade</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-estoque">
+              <tr>
+                <td colspan="4" class="empty">Carregando...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- PEDIDOS -->
+      <section id="page-pedidos" class="page">
+        <div class="page-header">
+          <div>
+            <h1>Pedidos</h1>
+            <p class="page-sub">Acompanhe os pedidos da confeitaria</p>
+          </div>
+          <button class="btn-primary">+ Novo pedido</button>
+        </div>
+        <div class="table-box">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Data entrega</th>
+                <th>Status</th>
+                <th>Valor total</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-pedidos">
+              <tr>
+                <td colspan="5" class="empty">Carregando...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>

@@ -6,6 +6,7 @@ export const FuncionarioSchema = z.object({
   senha: z.string().min(6, "Senha deve ter ao menos 6 caracteres"),
   telefone: z.string().min(1, "Telefone obrigatório"),
   cargo: z.string().min(2, "Cargo obrigatório"),
+  perfil: z.enum(["admin", "funcionario"]).default("funcionario"),
   ativo: z.number().int().min(0).max(1).default(1),
   data_admissao: z.string().min(1, "Adicione a data de admissão"),
 });

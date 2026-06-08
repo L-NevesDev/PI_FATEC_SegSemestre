@@ -23,13 +23,30 @@ router.get("/:id", (req, res) => {
   }
 });
 
-// Lucas: adicionado try/catch no POST — sem ele, erros do banco (ex: id_produto inexistente, FK constraint)
-// chegavam como 500 sem mensagem útil; agora retornam 400 com a mensagem de erro correta
 router.post("/", validar(EstoqueSchema), (req, res) => {
   try {
     res.status(201).json(estoqueService.adicionar(req.body));
   } catch (err: unknown) {
     res.status(400).json({ erro: (err as Error).message });
+  }
+});
+
+// PUT — atualiza um lote (parcial)
+router.put("/:id", validar(EstoqueSchema.partial()), (req, res) => {
+  try {
+    res.json(estoqueService.atualizar(Number(req.params.id), req.body));
+  } catch (err: any) {
+    res.status(404).json({ erro: err.message });
+  }
+});
+
+// DELETE — remove um lote
+router.delete("/:id", (req, res) => {
+  try {
+    estoqueService.deletar(Number(req.params.id));
+    res.status(204).send();
+  } catch (err: any) {
+    res.status(404).json({ erro: err.message });
   }
 });
 

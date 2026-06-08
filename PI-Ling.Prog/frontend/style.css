@@ -157,3 +157,52 @@ td.empty { color: #888; text-align: center; padding: 2rem; }
 @media (max-width: 800px) { .grid-2col { grid-template-columns: 1fr; } }
 
 .valor-positivo { color: #1E6B34; font-weight: 500; }
+
+/* SIDEBAR USER */
+.sidebar-user {
+  padding: 0.875rem 1rem;
+  border-top: 1px solid #333;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.user-info span:first-child {
+  font-size: 12px;
+  font-weight: 500;
+  color: #CCC;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-perfil {
+  font-size: 10px;
+  color: #888;
+}
+
+.btn-sair {
+  background: #2A2A2A;
+  color: #888;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+  font-family: inherit;
+}
+
+.btn-sair:hover {
+  background: #F8D7DA;
+  color: #1A1A1A;
+}

@@ -1,5 +1,38 @@
 const API = 'http://localhost:3000/api';
 
+// ─── AUTENTICAÇÃO ─────────────────────────────────────────────────────────────
+const token   = localStorage.getItem('token');
+const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
+
+// Redireciona para login se não tiver token
+if (!token) window.location.href = 'login.html';
+
+// Wrapper de fetch que inclui token e redireciona no 401
+async function apiFetch(url, options = {}) {
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      ...(options.headers || {}),
+    }
+  });
+  if (res.status === 401) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
+    window.location.href = 'login.html';
+    return null;
+  }
+  return res;
+}
+
+function sair() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('usuario');
+  localStorage.removeItem('paginaAtual');
+  window.location.href = 'login.html';
+}
+
 // ─── ESTADO GLOBAL ────────────────────────────────────────────────────────────
 let paginaAtual       = localStorage.getItem('paginaAtual') || 'inicio';
 let todosClientes     = [];
@@ -10,6 +43,33 @@ let todosPedidos      = [];
 let todosFuncionarios = [];
 let itensPedido       = [];
 let itemIdx           = 0;
+
+// ─── INICIALIZAR UI DE USUÁRIO ────────────────────────────────────────────────
+function inicializarUI() {
+  if (usuario) {
+    document.getElementById('usuario-nome').textContent = usuario.nome;
+    document.getElementById('usuario-perfil').textContent =
+      usuario.perfil === 'admin' ? '👑 Admin' : '👤 Funcionário';
+  }
+
+  if (ehAdmin()) {
+    // Admin vê tudo
+    document.getElementById('nav-funcionarios').style.display = 'flex';
+  } else {
+    // Funcionário: esconde grupo de Produtos (parent + submenu) e Clientes
+    const navGroup = document.querySelector('.nav-group');
+    if (navGroup) navGroup.style.display = 'none';
+    const navClientes = document.querySelector('.nav-item[data-page="clientes"]');
+    if (navClientes) navClientes.style.display = 'none';
+
+    // Se a página salva for restrita, redireciona para início
+    const paginasPermitidas = ['inicio', 'estoque', 'pedidos', 'relatorios'];
+    if (!paginasPermitidas.includes(paginaAtual)) {
+      paginaAtual = 'inicio';
+      localStorage.setItem('paginaAtual', 'inicio');
+    }
+  }
+}
 
 // ─── TOAST ────────────────────────────────────────────────────────────────────
 function toast(msg, tipo = 'success') {
@@ -35,6 +95,13 @@ document.querySelectorAll('.nav-item').forEach(item => {
 });
 
 function navegarPara(page) {
+  // Bloqueia acesso a páginas restritas para funcionários
+  const paginasAdmin = ['clientes', 'produtos', 'categorias', 'funcionarios'];
+  if (!ehAdmin() && paginasAdmin.includes(page)) {
+    toast('Acesso restrito a administradores.', 'error');
+    page = 'inicio';
+  }
+
   paginaAtual = page;
   localStorage.setItem('paginaAtual', page);
 
@@ -46,13 +113,14 @@ function navegarPara(page) {
   const pageEl = document.getElementById('page-' + page);
   if (pageEl) pageEl.classList.add('active');
 
-  if (page === 'inicio')     carregarInicio();
-  if (page === 'clientes')   carregarClientes();
-  if (page === 'produtos')   carregarProdutos();
-  if (page === 'categorias') carregarCategorias();
-  if (page === 'estoque')    carregarEstoque();
-  if (page === 'pedidos')    carregarPedidos();
-  if (page === 'relatorios') carregarRelatorios();
+  if (page === 'inicio')        carregarInicio();
+  if (page === 'clientes')      carregarClientes();
+  if (page === 'produtos')      carregarProdutos();
+  if (page === 'categorias')    carregarCategorias();
+  if (page === 'estoque')       carregarEstoque();
+  if (page === 'pedidos')       carregarPedidos();
+  if (page === 'relatorios')    carregarRelatorios();
+  if (page === 'funcionarios')  carregarFuncionarios();
 }
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
@@ -68,7 +136,6 @@ function formatarData(d) {
   return dt.toLocaleDateString('pt-BR');
 }
 
-// Normaliza qualquer formato de status para uma chave comum
 function normalizarStatus(s) {
   return (s || '').toString().toLowerCase().replace(/_/g, ' ').trim();
 }
@@ -115,18 +182,22 @@ function nomeDoCliente(id) {
   return c ? c.nome : '—';
 }
 
+function ehAdmin() {
+  return usuario?.perfil === 'admin';
+}
+
 // ─── TELA INICIAL ─────────────────────────────────────────────────────────────
 async function carregarInicio() {
   try {
     const [resP, resC, resE] = await Promise.all([
-      fetch(`${API}/pedidos`), fetch(`${API}/clientes`), fetch(`${API}/estoque`),
+      apiFetch(`${API}/pedidos`), apiFetch(`${API}/clientes`), apiFetch(`${API}/estoque`),
     ]);
     const pedidos = await resP.json();
     todosClientes = await resC.json();
     todosEstoque  = await resE.json();
 
-    const pendentes = pedidos.filter(p => normalizarStatus(p.status) === 'pendente').length;
-    const producao  = pedidos.filter(p => normalizarStatus(p.status) === 'em producao').length;
+    const pendentes = pedidos.filter(p => normalizarStatus(p.status_pedido) === 'pendente').length;
+    const producao  = pedidos.filter(p => normalizarStatus(p.status_pedido) === 'em producao').length;
 
     document.getElementById('inicio-pedidos-pendentes').textContent = pendentes;
     document.getElementById('inicio-pedidos-producao').textContent  = producao;
@@ -142,10 +213,10 @@ async function carregarInicio() {
     tbody.innerHTML = recentes.map(p => `
       <tr>
         <td>#${p.id_pedido || p.id}</td>
-        <td>${p.nome_cliente || nomeDoCliente(p.id_cliente)}</td>
+        <td>${p.cliente_nome || p.nome_cliente || nomeDoCliente(p.id_cliente)}</td>
         <td>${formatarData(p.data_entrega)}</td>
-        <td>${badgeStatus(p.status)}</td>
-        <td class="valor-positivo">${formatarMoeda(p.valor_total || p.total)}</td>
+        <td>${badgeStatus(p.status_pedido)}</td>
+        <td class="valor-positivo">${formatarMoeda(p.valor_total)}</td>
       </tr>
     `).join('');
   } catch {
@@ -158,7 +229,7 @@ async function carregarInicio() {
 async function carregarClientes() {
   const tbody = document.getElementById('tbody-clientes');
   try {
-    const res = await fetch(`${API}/clientes`);
+    const res = await apiFetch(`${API}/clientes`);
     todosClientes = await res.json();
     if (tbody) renderClientes(todosClientes);
   } catch {
@@ -179,7 +250,7 @@ function renderClientes(lista) {
       <td>${c.email || '—'}</td>
       <td class="acoes">
         <button type="button" class="btn-edit"   onclick="editarCliente(${c.id_cliente})">✏️</button>
-        <button type="button" class="btn-danger" onclick="deletarCliente(${c.id_cliente})">🗑</button>
+        ${ehAdmin() ? `<button type="button" class="btn-danger" onclick="deletarCliente(${c.id_cliente})">🗑</button>` : ''}
       </td>
     </tr>
   `).join('');
@@ -188,7 +259,7 @@ function renderClientes(lista) {
 async function deletarCliente(id) {
   if (!confirm('Remover este cliente?')) return;
   try {
-    await fetch(`${API}/clientes/${id}`, { method: 'DELETE' });
+    await apiFetch(`${API}/clientes/${id}`, { method: 'DELETE' });
     toast('Cliente removido!');
     navegarPara(paginaAtual);
   } catch { toast('Erro ao remover cliente.', 'error'); }
@@ -233,8 +304,7 @@ async function salvarCliente() {
   const body = { nome, cpf, telefone: tel, email, endereco: end };
   try {
     const url = id ? `${API}/clientes/${id}` : `${API}/clientes`;
-    const method = id ? 'PUT' : 'POST';
-    await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    await apiFetch(url, { method: id ? 'PUT' : 'POST', body: JSON.stringify(body) });
     toast(id ? 'Cliente atualizado!' : 'Cliente cadastrado!');
     fecharModalCliente();
     navegarPara(paginaAtual);
@@ -247,7 +317,7 @@ busca('busca-clientes', 'tbody-clientes');
 async function carregarCategorias() {
   const tbody = document.getElementById('tbody-categorias');
   try {
-    const res = await fetch(`${API}/categorias`);
+    const res = await apiFetch(`${API}/categorias`);
     todasCategorias = await res.json();
     if (tbody) renderCategorias(todasCategorias);
   } catch {
@@ -267,7 +337,7 @@ function renderCategorias(lista) {
       <td>${c.descricao || '—'}</td>
       <td class="acoes">
         <button type="button" class="btn-edit"   onclick="editarCategoria(${c.id_categoria})">✏️</button>
-        <button type="button" class="btn-danger" onclick="deletarCategoria(${c.id_categoria})">🗑</button>
+        ${ehAdmin() ? `<button type="button" class="btn-danger" onclick="deletarCategoria(${c.id_categoria})">🗑</button>` : ''}
       </td>
     </tr>
   `).join('');
@@ -298,7 +368,7 @@ function editarCategoria(id) {
 async function deletarCategoria(id) {
   if (!confirm('Remover esta categoria?')) return;
   try {
-    await fetch(`${API}/categorias/${id}`, { method: 'DELETE' });
+    await apiFetch(`${API}/categorias/${id}`, { method: 'DELETE' });
     toast('Categoria removida!');
     todasCategorias = [];
     navegarPara(paginaAtual);
@@ -313,8 +383,7 @@ async function salvarCategoria() {
   const body = { nome, descricao: desc || undefined };
   try {
     const url = id ? `${API}/categorias/${id}` : `${API}/categorias`;
-    const method = id ? 'PUT' : 'POST';
-    await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    await apiFetch(url, { method: id ? 'PUT' : 'POST', body: JSON.stringify(body) });
     toast(id ? 'Categoria atualizada!' : 'Categoria cadastrada!');
     fecharModalCategoria();
     todasCategorias = [];
@@ -327,7 +396,7 @@ async function carregarProdutos() {
   const tbody = document.getElementById('tbody-produtos');
   try {
     if (!todasCategorias.length) await carregarCategorias();
-    const res = await fetch(`${API}/produtos`);
+    const res = await apiFetch(`${API}/produtos`);
     todosProdutos = await res.json();
     if (tbody) renderProdutos(todosProdutos);
   } catch {
@@ -353,8 +422,8 @@ function renderProdutos(lista) {
       <td class="valor-positivo">${formatarMoeda(p.preco_base)}</td>
       <td>${badgeStatus(p.ativo === 0 ? 'inativo' : 'ativo')}</td>
       <td class="acoes">
-        <button type="button" class="btn-edit"   onclick="editarProduto(${p.id_produto})">✏️</button>
-        <button type="button" class="btn-danger" onclick="inativarProduto(${p.id_produto}, ${p.ativo})">🗑</button>
+        <button type="button" class="btn-edit" onclick="editarProduto(${p.id_produto})">✏️</button>
+        ${ehAdmin() ? `<button type="button" class="btn-danger" onclick="inativarProduto(${p.id_produto}, ${p.ativo})">🗑</button>` : ''}
       </td>
     </tr>
   `).join('');
@@ -364,7 +433,7 @@ async function inativarProduto(id, ativoAtual) {
   const novoAtivo = ativoAtual === 0 ? 1 : 0;
   if (!confirm(`${novoAtivo === 0 ? 'Inativar' : 'Reativar'} este produto?`)) return;
   try {
-    await fetch(`${API}/produtos/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ativo: novoAtivo }) });
+    await apiFetch(`${API}/produtos/${id}`, { method: 'PUT', body: JSON.stringify({ ativo: novoAtivo }) });
     toast(`Produto ${novoAtivo === 0 ? 'inativado' : 'reativado'}!`);
     navegarPara(paginaAtual);
   } catch { toast('Erro ao atualizar produto.', 'error'); }
@@ -421,17 +490,10 @@ async function salvarProduto() {
 
   if (!nome || !idCat || !preco) { toast('Nome, categoria e preço são obrigatórios.', 'error'); return; }
 
-  const body = {
-    nome_produto: nome,
-    id_categoria: Number(idCat),
-    preco_base:   Number(preco),
-    descricao:    desc || undefined,
-    preco_kg:     precoKg ? Number(precoKg) : undefined,
-  };
+  const body = { nome_produto: nome, id_categoria: Number(idCat), preco_base: Number(preco), descricao: desc || undefined, preco_kg: precoKg ? Number(precoKg) : undefined };
   try {
     const url = id ? `${API}/produtos/${id}` : `${API}/produtos`;
-    const method = id ? 'PUT' : 'POST';
-    await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    await apiFetch(url, { method: id ? 'PUT' : 'POST', body: JSON.stringify(body) });
     toast(id ? 'Produto atualizado!' : 'Produto cadastrado!');
     fecharModalProduto();
     navegarPara(paginaAtual);
@@ -444,7 +506,7 @@ busca('busca-produtos', 'tbody-produtos');
 async function carregarEstoque() {
   const tbody = document.getElementById('tbody-estoque');
   try {
-    const res = await fetch(`${API}/estoque`);
+    const res = await apiFetch(`${API}/estoque`);
     todosEstoque = await res.json();
     if (!tbody) return;
     if (!todosEstoque.length) {
@@ -453,14 +515,14 @@ async function carregarEstoque() {
     }
     tbody.innerHTML = todosEstoque.map(l => `
       <tr>
-        <td>${l.nome_produto || l.produto || '—'}</td>
-        <td>${l.lote || l.num_lote || '—'}</td>
-        <td>${l.quantidade_disponivel ?? l.quantidade ?? '—'}</td>
+        <td>${l.nome_produto || '—'}</td>
+        <td>${l.lote || '—'}</td>
+        <td>${l.quantidade_disponivel ?? '—'}</td>
         <td>${formatarData(l.data_producao)}</td>
         <td>${formatarData(l.data_validade)}</td>
         <td class="acoes">
           <button type="button" class="btn-edit"   onclick="editarLote(${l.id_estoque})">✏️</button>
-          <button type="button" class="btn-danger" onclick="deletarLote(${l.id_estoque})">🗑</button>
+          ${ehAdmin() ? `<button type="button" class="btn-danger" onclick="deletarLote(${l.id_estoque})">🗑</button>` : ''}
         </td>
       </tr>
     `).join('');
@@ -501,8 +563,8 @@ async function editarLote(id) {
   document.getElementById('modal-lote-titulo').textContent = 'Editar Lote';
   document.getElementById('lote-id').value         = l.id_estoque;
   document.getElementById('lote-produto').value    = l.id_produto || '';
-  document.getElementById('lote-numero').value     = l.lote || l.num_lote || '';
-  document.getElementById('lote-quantidade').value = l.quantidade_disponivel ?? l.quantidade ?? '';
+  document.getElementById('lote-numero').value     = l.lote || '';
+  document.getElementById('lote-quantidade').value = l.quantidade_disponivel ?? '';
   document.getElementById('lote-producao').value   = (l.data_producao || '').split('T')[0];
   document.getElementById('lote-validade').value   = (l.data_validade || '').split('T')[0];
   document.getElementById('modal-lote').classList.add('open');
@@ -511,7 +573,7 @@ async function editarLote(id) {
 async function deletarLote(id) {
   if (!confirm('Remover este lote?')) return;
   try {
-    await fetch(`${API}/estoque/${id}`, { method: 'DELETE' });
+    await apiFetch(`${API}/estoque/${id}`, { method: 'DELETE' });
     toast('Lote removido!');
     navegarPara(paginaAtual);
   } catch { toast('Erro ao remover lote.', 'error'); }
@@ -529,17 +591,10 @@ async function salvarLote() {
     toast('Todos os campos são obrigatórios.', 'error'); return;
   }
 
-  const body = {
-    id_produto:            Number(idProduto),
-    lote,
-    quantidade_disponivel: Number(qtd),
-    data_producao:         producao,
-    data_validade:         validade,
-  };
+  const body = { id_produto: Number(idProduto), lote, quantidade_disponivel: Number(qtd), data_producao: producao, data_validade: validade };
   try {
     const url = id ? `${API}/estoque/${id}` : `${API}/estoque`;
-    const method = id ? 'PUT' : 'POST';
-    await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    await apiFetch(url, { method: id ? 'PUT' : 'POST', body: JSON.stringify(body) });
     toast(id ? 'Lote atualizado!' : 'Lote adicionado!');
     fecharModalLote();
     navegarPara(paginaAtual);
@@ -551,7 +606,7 @@ async function carregarPedidos() {
   const tbody = document.getElementById('tbody-pedidos');
   try {
     if (!todosClientes.length) await carregarClientes();
-    const res = await fetch(`${API}/pedidos`);
+    const res = await apiFetch(`${API}/pedidos`);
     todosPedidos = await res.json();
     if (!tbody) return;
     if (!todosPedidos.length) {
@@ -561,10 +616,10 @@ async function carregarPedidos() {
     tbody.innerHTML = todosPedidos.map(p => `
       <tr>
         <td>#${p.id_pedido || p.id}</td>
-        <td>${p.nome_cliente || nomeDoCliente(p.id_cliente)}</td>
+        <td>${p.cliente_nome || p.nome_cliente || nomeDoCliente(p.id_cliente)}</td>
         <td>${formatarData(p.data_entrega)}</td>
-        <td>${badgeStatus(p.status)}</td>
-        <td class="valor-positivo">${formatarMoeda(p.valor_total || p.total)}</td>
+        <td>${badgeStatus(p.status_pedido)}</td>
+        <td class="valor-positivo">${formatarMoeda(p.valor_total)}</td>
         <td class="acoes">
           <button type="button" class="btn-edit" onclick="abrirEditarPedido(${p.id_pedido || p.id})">✏️</button>
         </td>
@@ -589,7 +644,7 @@ async function abrirModalPedido() {
   });
 
   try {
-    const res = await fetch(`${API}/funcionarios`);
+    const res = await apiFetch(`${API}/funcionarios`);
     todosFuncionarios = await res.json();
   } catch { todosFuncionarios = []; }
   const selFunc = document.getElementById('pedido-funcionario');
@@ -618,8 +673,8 @@ function fecharModalPedido() {
 }
 
 function toggleEntrega() {
-  const checked = document.getElementById('pedido-tem-entrega').checked;
-  document.getElementById('pedido-entrega-fields').style.display = checked ? 'block' : 'none';
+  document.getElementById('pedido-entrega-fields').style.display =
+    document.getElementById('pedido-tem-entrega').checked ? 'block' : 'none';
 }
 
 function adicionarItemPedido() {
@@ -645,21 +700,11 @@ function renderItensPedido() {
           <label>Item do estoque *</label>
           <select id="item-estoque-${item.idx}">
             <option value="">Selecione...</option>
-            ${todosEstoque.map(e => `
-              <option value="${e.id_estoque}">
-                ${e.nome_produto || '—'} — Lote: ${e.lote || '—'} (${e.quantidade_disponivel ?? 0} disp.)
-              </option>
-            `).join('')}
+            ${todosEstoque.map(e => `<option value="${e.id_estoque}">${e.nome_produto || '—'} — Lote: ${e.lote || '—'} (${e.quantidade_disponivel ?? 0} disp.)</option>`).join('')}
           </select>
         </div>
-        <div class="form-group">
-          <label>Qtd *</label>
-          <input type="number" id="item-qtd-${item.idx}" min="1" placeholder="1">
-        </div>
-        <div class="form-group">
-          <label>Valor unit. *</label>
-          <input type="number" id="item-valor-${item.idx}" step="0.01" min="0" placeholder="0.00">
-        </div>
+        <div class="form-group"><label>Qtd *</label><input type="number" id="item-qtd-${item.idx}" min="1" placeholder="1"></div>
+        <div class="form-group"><label>Valor unit. *</label><input type="number" id="item-valor-${item.idx}" step="0.01" min="0" placeholder="0.00"></div>
         <div style="padding-bottom:0.75rem">
           <button type="button" class="btn-danger" onclick="removerItemPedido(${item.idx})">✕</button>
         </div>
@@ -674,12 +719,8 @@ async function salvarPedido() {
   const dataEntrega = document.getElementById('pedido-data-entrega').value;
   const obs         = document.getElementById('pedido-observacoes').value.trim();
 
-  if (!idCliente || !idFunc || !dataEntrega) {
-    toast('Cliente, funcionário e data são obrigatórios.', 'error'); return;
-  }
-  if (!itensPedido.length) {
-    toast('Adicione pelo menos um item ao pedido.', 'error'); return;
-  }
+  if (!idCliente || !idFunc || !dataEntrega) { toast('Cliente, funcionário e data são obrigatórios.', 'error'); return; }
+  if (!itensPedido.length) { toast('Adicione pelo menos um item ao pedido.', 'error'); return; }
 
   const itens = [];
   for (const item of itensPedido) {
@@ -690,42 +731,28 @@ async function salvarPedido() {
     itens.push({ id_estoque: Number(idEstoque), quantidade: Number(qtd), valor_unitario: Number(valor) });
   }
 
-  const body = {
-    id_cliente:     Number(idCliente),
-    id_funcionario: Number(idFunc),
-    data_entrega:   dataEntrega,
-    observacoes:    obs || undefined,
-    itens,
-  };
+  const body = { id_cliente: Number(idCliente), id_funcionario: Number(idFunc), data_entrega: dataEntrega, observacoes: obs || undefined, itens };
 
   if (document.getElementById('pedido-tem-entrega').checked) {
-    const recebedor    = document.getElementById('pedido-recebedor').value.trim();
-    const endEntrega   = document.getElementById('pedido-endereco-entrega').value.trim();
-    const valorEntrega = document.getElementById('pedido-valor-entrega').value;
-    if (recebedor.length < 10 || endEntrega.length < 10) {
-      toast('Nome do recebedor e endereço precisam ter ao menos 10 caracteres.', 'error'); return;
-    }
-    body.entrega = { nome_recebedor: recebedor, endereco_entrega: endEntrega, valor_entrega: Number(valorEntrega) || 0 };
+    const recebedor  = document.getElementById('pedido-recebedor').value.trim();
+    const endEntrega = document.getElementById('pedido-endereco-entrega').value.trim();
+    const valEnt     = document.getElementById('pedido-valor-entrega').value;
+    if (recebedor.length < 10 || endEntrega.length < 10) { toast('Nome do recebedor e endereço precisam ter ao menos 10 caracteres.', 'error'); return; }
+    body.entrega = { nome_recebedor: recebedor, endereco_entrega: endEntrega, valor_entrega: Number(valEnt) || 0 };
   }
 
   try {
-    await fetch(`${API}/pedidos`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    await apiFetch(`${API}/pedidos`, { method: 'POST', body: JSON.stringify(body) });
     toast('Pedido cadastrado!');
     fecharModalPedido();
     navegarPara(paginaAtual);
   } catch { toast('Erro ao salvar pedido.', 'error'); }
 }
 
-// Editar status do pedido (PATCH /api/pedidos/:id/status)
-// Backend aceita: PENDENTE, EM_PRODUCAO, PRONTO, ENTREGUE, CANCELADO
 function abrirEditarPedido(id) {
   const p = todosPedidos.find(x => (x.id_pedido || x.id) === id);
   if (!p) return;
-
-  // Normaliza qualquer formato vindo do backend ("pendente", "em producao", "EM_PRODUCAO"...)
-  // para o formato esperado pelo select (MAIÚSCULAS com underscore)
-  const statusUpper = (p.status || 'PENDENTE').toString().toUpperCase().replace(/\s+/g, '_');
-
+  const statusUpper = (p.status_pedido || 'PENDENTE').toUpperCase().replace(/\s+/g, '_');
   document.getElementById('pedido-edit-id').value     = id;
   document.getElementById('pedido-edit-status').value = statusUpper;
   document.getElementById('modal-pedido-editar').classList.add('open');
@@ -738,25 +765,110 @@ function fecharModalPedidoEditar() {
 async function salvarPedidoEditado() {
   const id     = document.getElementById('pedido-edit-id').value;
   const status = document.getElementById('pedido-edit-status').value;
-
   try {
-    const res = await fetch(`${API}/pedidos/${id}/status`, {
-      method: 'PATCH',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ status })
-    });
-    if (!res.ok) { toast('Erro ao atualizar status.', 'error'); return; }
+    const res = await apiFetch(`${API}/pedidos/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
+    if (!res || !res.ok) { toast('Erro ao atualizar status.', 'error'); return; }
     toast('Status atualizado!');
     fecharModalPedidoEditar();
     navegarPara(paginaAtual);
   } catch { toast('Erro ao atualizar pedido.', 'error'); }
 }
 
+// ─── FUNCIONÁRIOS (só admin) ──────────────────────────────────────────────────
+async function carregarFuncionarios() {
+  if (!ehAdmin()) { navegarPara('inicio'); return; }
+  const tbody = document.getElementById('tbody-funcionarios');
+  try {
+    const res = await apiFetch(`${API}/funcionarios`);
+    todosFuncionarios = await res.json();
+    if (!tbody) return;
+    if (!todosFuncionarios.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty">Nenhum funcionário cadastrado</td></tr>';
+      return;
+    }
+    tbody.innerHTML = todosFuncionarios.map(f => `
+      <tr>
+        <td>${f.nome}</td>
+        <td>${f.email}</td>
+        <td>${f.cargo || '—'}</td>
+        <td><span class="badge ${f.perfil === 'admin' ? 'badge-producao' : 'badge-entregue'}">${f.perfil === 'admin' ? '👑 Admin' : '👤 Funcionário'}</span></td>
+        <td class="acoes">
+          <button type="button" class="btn-edit"   onclick="editarFuncionario(${f.id_funcionario})">✏️</button>
+          <button type="button" class="btn-danger" onclick="inativarFuncionario(${f.id_funcionario})">🗑</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch {
+    if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="empty">Erro ao carregar funcionários.</td></tr>';
+  }
+}
+
+function abrirModalFuncionario() {
+  document.getElementById('modal-funcionario-titulo').textContent = 'Novo Funcionário';
+  ['func-id','func-nome','func-email','func-senha','func-telefone','func-cargo','func-admissao']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('func-perfil').value = 'funcionario';
+  document.getElementById('modal-funcionario').classList.add('open');
+}
+
+function fecharModalFuncionario() {
+  document.getElementById('modal-funcionario').classList.remove('open');
+}
+
+function editarFuncionario(id) {
+  const f = todosFuncionarios.find(x => x.id_funcionario === id);
+  if (!f) return;
+  document.getElementById('modal-funcionario-titulo').textContent = 'Editar Funcionário';
+  document.getElementById('func-id').value        = f.id_funcionario;
+  document.getElementById('func-nome').value      = f.nome || '';
+  document.getElementById('func-email').value     = f.email || '';
+  document.getElementById('func-senha').value     = '';
+  document.getElementById('func-telefone').value  = f.telefone || '';
+  document.getElementById('func-cargo').value     = f.cargo || '';
+  document.getElementById('func-perfil').value    = f.perfil || 'funcionario';
+  document.getElementById('func-admissao').value  = (f.data_admissao || '').split('T')[0];
+  document.getElementById('modal-funcionario').classList.add('open');
+}
+
+async function inativarFuncionario(id) {
+  if (!confirm('Inativar este funcionário?')) return;
+  try {
+    await apiFetch(`${API}/funcionarios/${id}`, { method: 'DELETE' });
+    toast('Funcionário inativado!');
+    navegarPara(paginaAtual);
+  } catch { toast('Erro ao inativar funcionário.', 'error'); }
+}
+
+async function salvarFuncionario() {
+  const id       = document.getElementById('func-id').value;
+  const nome     = document.getElementById('func-nome').value.trim();
+  const email    = document.getElementById('func-email').value.trim();
+  const senha    = document.getElementById('func-senha').value;
+  const telefone = document.getElementById('func-telefone').value.trim();
+  const cargo    = document.getElementById('func-cargo').value.trim();
+  const perfil   = document.getElementById('func-perfil').value;
+  const admissao = document.getElementById('func-admissao').value;
+
+  if (!nome || !email || !telefone || !cargo || !admissao) { toast('Preencha todos os campos obrigatórios.', 'error'); return; }
+  if (!id && !senha) { toast('Senha é obrigatória para novos funcionários.', 'error'); return; }
+
+  const body = { nome, email, telefone, cargo, perfil, data_admissao: admissao, ativo: 1 };
+  if (senha) body.senha = senha;
+
+  try {
+    const url = id ? `${API}/funcionarios/${id}` : `${API}/funcionarios`;
+    await apiFetch(url, { method: id ? 'PUT' : 'POST', body: JSON.stringify(body) });
+    toast(id ? 'Funcionário atualizado!' : 'Funcionário cadastrado!');
+    fecharModalFuncionario();
+    navegarPara(paginaAtual);
+  } catch { toast('Erro ao salvar funcionário.', 'error'); }
+}
+
 // ─── RELATÓRIOS ───────────────────────────────────────────────────────────────
 async function carregarRelatorios() {
   try {
     const [resP, resC, resPr, resE] = await Promise.all([
-      fetch(`${API}/pedidos`), fetch(`${API}/clientes`), fetch(`${API}/produtos`), fetch(`${API}/estoque`),
+      apiFetch(`${API}/pedidos`), apiFetch(`${API}/clientes`), apiFetch(`${API}/produtos`), apiFetch(`${API}/estoque`),
     ]);
     const pedidos  = await resP.json();
     const clientes = await resC.json();
@@ -764,21 +876,14 @@ async function carregarRelatorios() {
     const estoque  = await resE.json();
     todosClientes  = clientes;
 
-    // Cards
-    const fat = pedidos.reduce((acc, p) => acc + Number(p.valor_total || p.total || 0), 0);
+    const fat = pedidos.reduce((acc, p) => acc + Number(p.valor_total || 0), 0);
     const ticketMedio = pedidos.length ? fat / pedidos.length : 0;
-
     const hoje = new Date();
     const fatMes = pedidos
-      .filter(p => {
-        if (!p.data_entrega) return false;
-        const d = new Date(p.data_entrega);
-        return d.getMonth() === hoje.getMonth() && d.getFullYear() === hoje.getFullYear();
-      })
-      .reduce((acc, p) => acc + Number(p.valor_total || p.total || 0), 0);
-
-    const pendentes  = pedidos.filter(p => normalizarStatus(p.status) === 'pendente').length;
-    const cancelados = pedidos.filter(p => normalizarStatus(p.status) === 'cancelado').length;
+      .filter(p => { if (!p.data_entrega) return false; const d = new Date(p.data_entrega); return d.getMonth() === hoje.getMonth() && d.getFullYear() === hoje.getFullYear(); })
+      .reduce((acc, p) => acc + Number(p.valor_total || 0), 0);
+    const pendentes  = pedidos.filter(p => normalizarStatus(p.status_pedido) === 'pendente').length;
+    const cancelados = pedidos.filter(p => normalizarStatus(p.status_pedido) === 'cancelado').length;
     const taxaCancel = pedidos.length ? (cancelados / pedidos.length) * 100 : 0;
 
     document.getElementById('rel-total-pedidos').textContent  = pedidos.length;
@@ -790,94 +895,40 @@ async function carregarRelatorios() {
     document.getElementById('rel-pendentes').textContent      = pendentes;
     document.getElementById('rel-taxa-cancel').textContent    = taxaCancel.toFixed(1) + '%';
 
-    // Alerta de validade
+    // Alerta validade
     const seteDiasMs = 7 * 24 * 60 * 60 * 1000;
-    const hojeMs = hoje.getTime();
-    const vencendo = estoque.filter(l => {
-      if (!l.data_validade) return false;
-      const dv = new Date(l.data_validade).getTime();
-      return dv >= hojeMs && dv <= hojeMs + seteDiasMs;
-    });
-    const alertaBox   = document.getElementById('alerta-validade');
-    const alertaLista = document.getElementById('alerta-validade-lista');
+    const vencendo = estoque.filter(l => { if (!l.data_validade) return false; const dv = new Date(l.data_validade).getTime(); return dv >= hoje.getTime() && dv <= hoje.getTime() + seteDiasMs; });
+    const alertaBox = document.getElementById('alerta-validade');
     if (vencendo.length) {
       alertaBox.style.display = 'block';
-      alertaLista.innerHTML = vencendo.map(l => `
-        <div class="alerta-item">
-          <strong>${l.nome_produto || 'Produto'}</strong> — Lote ${l.lote || '—'}
-          <span class="alerta-data">vence em ${formatarData(l.data_validade)}</span>
-        </div>
+      document.getElementById('alerta-validade-lista').innerHTML = vencendo.map(l => `
+        <div class="alerta-item"><strong>${l.nome_produto || 'Produto'}</strong> — Lote ${l.lote || '—'}<span class="alerta-data">vence em ${formatarData(l.data_validade)}</span></div>
       `).join('');
-    } else {
-      alertaBox.style.display = 'none';
-    }
+    } else { alertaBox.style.display = 'none'; }
 
-    // Gráfico últimos 7 dias
+    // Gráfico
     const dias = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      d.setHours(0, 0, 0, 0);
-      dias.push({ data: d, total: 0, label: d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '') });
-    }
-    pedidos.forEach(p => {
-      if (!p.data_entrega) return;
-      const dp = new Date(p.data_entrega);
-      dp.setHours(0, 0, 0, 0);
-      const dia = dias.find(d => d.data.getTime() === dp.getTime());
-      if (dia) dia.total += Number(p.valor_total || p.total || 0);
-    });
+    for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0); dias.push({ data: d, total: 0, label: d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '') }); }
+    pedidos.forEach(p => { if (!p.data_entrega) return; const dp = new Date(p.data_entrega); dp.setHours(0,0,0,0); const dia = dias.find(d => d.data.getTime() === dp.getTime()); if (dia) dia.total += Number(p.valor_total || 0); });
     const maxVal = Math.max(...dias.map(d => d.total), 1);
-    document.getElementById('bar-chart-7dias').innerHTML = dias.map(d => {
-      const altura = (d.total / maxVal) * 100;
-      return `
-        <div class="bar-column">
-          <div class="bar-wrap">
-            <div class="bar-value">${d.total > 0 ? formatarMoeda(d.total) : ''}</div>
-            <div class="bar-fill" style="height:${Math.max(altura, 2)}%"></div>
-          </div>
-          <div class="bar-label">${d.label}</div>
-        </div>
-      `;
-    }).join('');
+    document.getElementById('bar-chart-7dias').innerHTML = dias.map(d => `
+      <div class="bar-column"><div class="bar-wrap"><div class="bar-value">${d.total > 0 ? formatarMoeda(d.total) : ''}</div><div class="bar-fill" style="height:${Math.max((d.total/maxVal)*100, 2)}%"></div></div><div class="bar-label">${d.label}</div></div>
+    `).join('');
 
-    // Top 5 clientes
+    // Top clientes
     const porCliente = {};
-    pedidos.forEach(p => {
-      const id = p.id_cliente;
-      if (!id) return;
-      if (!porCliente[id]) porCliente[id] = { count: 0, total: 0 };
-      porCliente[id].count++;
-      porCliente[id].total += Number(p.valor_total || p.total || 0);
-    });
-    const top5 = Object.entries(porCliente).sort((a, b) => b[1].count - a[1].count).slice(0, 5);
-    const tbodyTop = document.getElementById('tbody-top-clientes');
-    tbodyTop.innerHTML = top5.length
-      ? top5.map(([id, dados]) => `
-          <tr>
-            <td>${nomeDoCliente(Number(id))}</td>
-            <td>${dados.count}</td>
-            <td class="valor-positivo">${formatarMoeda(dados.total)}</td>
-          </tr>
-        `).join('')
+    pedidos.forEach(p => { const id = p.id_cliente; if (!id) return; if (!porCliente[id]) porCliente[id] = { count: 0, total: 0 }; porCliente[id].count++; porCliente[id].total += Number(p.valor_total || 0); });
+    const top5 = Object.entries(porCliente).sort((a,b) => b[1].count - a[1].count).slice(0,5);
+    document.getElementById('tbody-top-clientes').innerHTML = top5.length
+      ? top5.map(([id, d]) => `<tr><td>${nomeDoCliente(Number(id))}</td><td>${d.count}</td><td class="valor-positivo">${formatarMoeda(d.total)}</td></tr>`).join('')
       : '<tr><td colspan="3" class="empty">Sem dados ainda</td></tr>';
 
-    // Pedidos por status
+    // Status
     const contagem = {};
-    pedidos.forEach(p => {
-      const s = normalizarStatus(p.status) || 'pendente';
-      contagem[s] = (contagem[s] || 0) + 1;
-    });
-    const tbodyStatus = document.getElementById('tbody-relatorio-status');
-    tbodyStatus.innerHTML = pedidos.length
-      ? Object.entries(contagem).sort((a, b) => b[1] - a[1]).map(([status, qtd]) => `
-          <tr>
-            <td>${badgeStatus(status)}</td>
-            <td>${qtd}</td>
-            <td>${Math.round((qtd / pedidos.length) * 100)}%</td>
-          </tr>
-        `).join('')
-      : '<tr><td colspan="3" class="empty">Nenhum pedido registrado</td></tr>';
+    pedidos.forEach(p => { const s = normalizarStatus(p.status_pedido) || 'pendente'; contagem[s] = (contagem[s] || 0) + 1; });
+    document.getElementById('tbody-relatorio-status').innerHTML = pedidos.length
+      ? Object.entries(contagem).sort((a,b) => b[1]-a[1]).map(([s,q]) => `<tr><td>${badgeStatus(s)}</td><td>${q}</td><td>${Math.round((q/pedidos.length)*100)}%</td></tr>`).join('')
+      : '<tr><td colspan="3" class="empty">Nenhum pedido</td></tr>';
 
   } catch {
     const el = document.getElementById('tbody-relatorio-status');
@@ -893,4 +944,5 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 });
 
 // ─── INICIALIZAÇÃO ────────────────────────────────────────────────────────────
+inicializarUI();
 navegarPara(paginaAtual);

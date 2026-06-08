@@ -26,7 +26,22 @@ export const estoqueRepository = {
     return { id_estoque: Number(resultado.lastInsertRowid), ...dados };
   },
 
-  // Busca itens com validade próxima
+  atualizar: (id: number, dados: Partial<Omit<Estoque, "id_estoque">>): void => {
+    db.prepare(`
+      UPDATE Estoque SET
+        id_produto             = COALESCE(@id_produto,             id_produto),
+        quantidade_disponivel  = COALESCE(@quantidade_disponivel,  quantidade_disponivel),
+        data_producao          = COALESCE(@data_producao,          data_producao),
+        data_validade          = COALESCE(@data_validade,          data_validade),
+        lote                   = COALESCE(@lote,                   lote)
+      WHERE id_estoque = @id
+    `).run({ id_produto: null, quantidade_disponivel: null, data_producao: null, data_validade: null, lote: null, ...dados, id });
+  },
+
+  deletar: (id: number): void => {
+    db.prepare("DELETE FROM Estoque WHERE id_estoque = ?").run(id);
+  },
+
   proximosDoVencimento: (dias: number): Estoque[] => {
     return db.prepare(`
       SELECT e.*, p.nome_produto FROM Estoque e

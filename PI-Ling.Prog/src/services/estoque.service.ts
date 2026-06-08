@@ -17,7 +17,18 @@ export const estoqueService = {
     return estoqueRepository.criar(dados);
   },
 
-  //alerta produtos próximos do vencimento (padrão: 3 dias)
+  atualizar: (id: number, dados: Partial<Omit<Estoque, "id_estoque">>): Estoque => {
+    estoqueService.buscarPorId(id);
+    estoqueRepository.atualizar(id, dados);
+    return estoqueService.buscarPorId(id);
+  },
+
+  deletar: (id: number): void => {
+    estoqueService.buscarPorId(id);
+    estoqueRepository.deletar(id);
+  },
+
+  // alerta produtos próximos do vencimento (padrão: 3 dias)
   alertarVencimento: (dias: number = 3): Estoque[] => {
     return estoqueRepository.proximosDoVencimento(dias);
   },

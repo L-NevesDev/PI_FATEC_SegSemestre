@@ -21,9 +21,7 @@
         <a href="#" class="nav-item active" data-page="inicio">🏠 Tela inicial</a>
         <a href="#" class="nav-item" data-page="clientes">👥 Clientes</a>
         <div class="nav-group">
-          <a href="#" class="nav-item nav-parent" data-page="produtos">
-            🎂 Produtos <span class="nav-arrow">▾</span>
-          </a>
+          <a href="#" class="nav-item nav-parent" data-page="produtos">🎂 Produtos <span class="nav-arrow">▾</span></a>
           <div class="nav-submenu" id="submenu-produtos">
             <a href="#" class="nav-item nav-sub" data-page="produtos">📋 Catálogo</a>
             <a href="#" class="nav-item nav-sub" data-page="categorias">🏷️ Categorias</a>
@@ -32,10 +30,14 @@
         <a href="#" class="nav-item" data-page="estoque">📦 Estoque</a>
         <a href="#" class="nav-item" data-page="pedidos">📋 Pedidos</a>
         <a href="#" class="nav-item" data-page="relatorios">📊 Relatórios</a>
+        <a href="#" class="nav-item" data-page="funcionarios" id="nav-funcionarios" style="display:none">👤 Funcionários</a>
       </nav>
-      <div class="sidebar-footer">
-        <p>FATEC Indaiatuba</p>
-        <p>ADS 2º Período</p>
+      <div class="sidebar-user">
+        <div class="user-info">
+          <span id="usuario-nome">—</span>
+          <span id="usuario-perfil" class="user-perfil">—</span>
+        </div>
+        <button type="button" class="btn-sair" onclick="sair()">Sair</button>
       </div>
     </aside>
 
@@ -46,50 +48,19 @@
         <div class="page-header">
           <div><h1>Tela inicial</h1><p class="page-sub">Visão geral da confeitaria</p></div>
         </div>
-
         <div class="inicio-stats">
-          <div class="stat-card">
-            <div class="stat-icon">📋</div>
-            <div class="stat-value" id="inicio-pedidos-pendentes">—</div>
-            <div class="stat-label">Pedidos pendentes</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">🔵</div>
-            <div class="stat-value" id="inicio-pedidos-producao">—</div>
-            <div class="stat-label">Em produção</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">👥</div>
-            <div class="stat-value" id="inicio-total-clientes">—</div>
-            <div class="stat-label">Clientes</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">📦</div>
-            <div class="stat-value" id="inicio-total-estoque">—</div>
-            <div class="stat-label">Lotes em estoque</div>
-          </div>
+          <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value" id="inicio-pedidos-pendentes">—</div><div class="stat-label">Pedidos pendentes</div></div>
+          <div class="stat-card"><div class="stat-icon">🔵</div><div class="stat-value" id="inicio-pedidos-producao">—</div><div class="stat-label">Em produção</div></div>
+          <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="inicio-total-clientes">—</div><div class="stat-label">Clientes</div></div>
+          <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="inicio-total-estoque">—</div><div class="stat-label">Lotes em estoque</div></div>
         </div>
-
         <h2 class="section-title">Ações rápidas</h2>
         <div class="quick-actions">
-          <button type="button" class="quick-action" onclick="abrirModalPedido()">
-            <span class="quick-action-icon">📋</span>
-            <span class="quick-action-label">Novo pedido</span>
-          </button>
-          <button type="button" class="quick-action" onclick="abrirModalCliente()">
-            <span class="quick-action-icon">👤</span>
-            <span class="quick-action-label">Novo cliente</span>
-          </button>
-          <button type="button" class="quick-action" onclick="abrirModalLote()">
-            <span class="quick-action-icon">📦</span>
-            <span class="quick-action-label">Adicionar lote</span>
-          </button>
-          <button type="button" class="quick-action" onclick="navegarPara('relatorios')">
-            <span class="quick-action-icon">📊</span>
-            <span class="quick-action-label">Ver relatórios</span>
-          </button>
+          <button type="button" class="quick-action" onclick="abrirModalPedido()"><span class="quick-action-icon">📋</span><span class="quick-action-label">Novo pedido</span></button>
+          <button type="button" class="quick-action" onclick="abrirModalCliente()"><span class="quick-action-icon">👤</span><span class="quick-action-label">Novo cliente</span></button>
+          <button type="button" class="quick-action" onclick="abrirModalLote()"><span class="quick-action-icon">📦</span><span class="quick-action-label">Adicionar lote</span></button>
+          <button type="button" class="quick-action" onclick="navegarPara('relatorios')"><span class="quick-action-icon">📊</span><span class="quick-action-label">Ver relatórios</span></button>
         </div>
-
         <h2 class="section-title">Pedidos recentes</h2>
         <div class="table-box">
           <table>
@@ -105,9 +76,7 @@
           <div><h1>Clientes</h1><p class="page-sub">Gerencie os clientes da confeitaria</p></div>
           <button type="button" class="btn-primary" onclick="abrirModalCliente()">+ Novo cliente</button>
         </div>
-        <div class="search-box">
-          <input type="text" id="busca-clientes" placeholder="🔍 Buscar cliente...">
-        </div>
+        <div class="search-box"><input type="text" id="busca-clientes" placeholder="🔍 Buscar cliente..."></div>
         <div class="table-box">
           <table>
             <thead><tr><th>Nome</th><th>Telefone</th><th>Email</th><th>Ações</th></tr></thead>
@@ -122,9 +91,7 @@
           <div><h1>Produtos</h1><p class="page-sub">Catálogo de produtos da confeitaria</p></div>
           <button type="button" class="btn-primary" onclick="abrirModalProduto()">+ Novo produto</button>
         </div>
-        <div class="search-box">
-          <input type="text" id="busca-produtos" placeholder="🔍 Buscar produto...">
-        </div>
+        <div class="search-box"><input type="text" id="busca-produtos" placeholder="🔍 Buscar produto..."></div>
         <div class="table-box">
           <table>
             <thead><tr><th>Nome</th><th>Categoria</th><th>Preço base</th><th>Status</th><th>Ações</th></tr></thead>
@@ -167,9 +134,7 @@
           <div><h1>Pedidos</h1><p class="page-sub">Acompanhe os pedidos da confeitaria</p></div>
           <button type="button" class="btn-primary" onclick="abrirModalPedido()">+ Novo pedido</button>
         </div>
-        <div class="search-box">
-          <input type="text" id="busca-pedidos" placeholder="🔍 Buscar pedido ou cliente...">
-        </div>
+        <div class="search-box"><input type="text" id="busca-pedidos" placeholder="🔍 Buscar pedido ou cliente..."></div>
         <div class="table-box">
           <table>
             <thead><tr><th>ID</th><th>Cliente</th><th>Data entrega</th><th>Status</th><th>Valor total</th><th>Ações</th></tr></thead>
@@ -184,79 +149,45 @@
           <div><h1>Relatórios</h1><p class="page-sub">Visão geral do negócio</p></div>
           <button type="button" class="btn-secondary" onclick="carregarRelatorios()">↻ Atualizar</button>
         </div>
-
         <div class="relatorio-cards">
-          <div class="relatorio-card">
-            <div class="relatorio-card-icon">📋</div>
-            <div class="relatorio-card-num" id="rel-total-pedidos">—</div>
-            <div class="relatorio-card-label">Total de pedidos</div>
-          </div>
-          <div class="relatorio-card">
-            <div class="relatorio-card-icon">💰</div>
-            <div class="relatorio-card-num" id="rel-faturamento">—</div>
-            <div class="relatorio-card-label">Faturamento total</div>
-          </div>
-          <div class="relatorio-card">
-            <div class="relatorio-card-icon">🎯</div>
-            <div class="relatorio-card-num" id="rel-ticket-medio">—</div>
-            <div class="relatorio-card-label">Ticket médio</div>
-          </div>
-          <div class="relatorio-card">
-            <div class="relatorio-card-icon">📅</div>
-            <div class="relatorio-card-num" id="rel-fat-mes">—</div>
-            <div class="relatorio-card-label">Faturamento do mês</div>
-          </div>
-          <div class="relatorio-card">
-            <div class="relatorio-card-icon">👥</div>
-            <div class="relatorio-card-num" id="rel-total-clientes">—</div>
-            <div class="relatorio-card-label">Clientes</div>
-          </div>
-          <div class="relatorio-card">
-            <div class="relatorio-card-icon">🎂</div>
-            <div class="relatorio-card-num" id="rel-total-produtos">—</div>
-            <div class="relatorio-card-label">Produtos ativos</div>
-          </div>
-          <div class="relatorio-card">
-            <div class="relatorio-card-icon">⏳</div>
-            <div class="relatorio-card-num" id="rel-pendentes">—</div>
-            <div class="relatorio-card-label">Pedidos pendentes</div>
-          </div>
-          <div class="relatorio-card">
-            <div class="relatorio-card-icon">❌</div>
-            <div class="relatorio-card-num" id="rel-taxa-cancel">—</div>
-            <div class="relatorio-card-label">Taxa de cancelamento</div>
-          </div>
+          <div class="relatorio-card"><div class="relatorio-card-icon">📋</div><div class="relatorio-card-num" id="rel-total-pedidos">—</div><div class="relatorio-card-label">Total de pedidos</div></div>
+          <div class="relatorio-card"><div class="relatorio-card-icon">💰</div><div class="relatorio-card-num" id="rel-faturamento">—</div><div class="relatorio-card-label">Faturamento total</div></div>
+          <div class="relatorio-card"><div class="relatorio-card-icon">🎯</div><div class="relatorio-card-num" id="rel-ticket-medio">—</div><div class="relatorio-card-label">Ticket médio</div></div>
+          <div class="relatorio-card"><div class="relatorio-card-icon">📅</div><div class="relatorio-card-num" id="rel-fat-mes">—</div><div class="relatorio-card-label">Faturamento do mês</div></div>
+          <div class="relatorio-card"><div class="relatorio-card-icon">👥</div><div class="relatorio-card-num" id="rel-total-clientes">—</div><div class="relatorio-card-label">Clientes</div></div>
+          <div class="relatorio-card"><div class="relatorio-card-icon">🎂</div><div class="relatorio-card-num" id="rel-total-produtos">—</div><div class="relatorio-card-label">Produtos ativos</div></div>
+          <div class="relatorio-card"><div class="relatorio-card-icon">⏳</div><div class="relatorio-card-num" id="rel-pendentes">—</div><div class="relatorio-card-label">Pedidos pendentes</div></div>
+          <div class="relatorio-card"><div class="relatorio-card-icon">❌</div><div class="relatorio-card-num" id="rel-taxa-cancel">—</div><div class="relatorio-card-label">Taxa de cancelamento</div></div>
         </div>
-
         <div id="alerta-validade" class="alerta-validade" style="display:none">
           <div class="alerta-titulo">⚠️ Lotes vencendo nos próximos 7 dias</div>
           <div id="alerta-validade-lista"></div>
         </div>
-
         <h2 class="relatorio-titulo">Faturamento — últimos 7 dias</h2>
-        <div class="chart-box">
-          <div class="bar-chart" id="bar-chart-7dias"></div>
-        </div>
-
+        <div class="chart-box"><div class="bar-chart" id="bar-chart-7dias"></div></div>
         <div class="grid-2col">
           <div>
             <h2 class="relatorio-titulo">Top 5 clientes</h2>
-            <div class="table-box">
-              <table>
-                <thead><tr><th>Cliente</th><th>Pedidos</th><th>Valor total</th></tr></thead>
-                <tbody id="tbody-top-clientes"><tr><td colspan="3" class="empty">Carregando...</td></tr></tbody>
-              </table>
-            </div>
+            <div class="table-box"><table><thead><tr><th>Cliente</th><th>Pedidos</th><th>Valor total</th></tr></thead><tbody id="tbody-top-clientes"><tr><td colspan="3" class="empty">Carregando...</td></tr></tbody></table></div>
           </div>
           <div>
             <h2 class="relatorio-titulo">Pedidos por status</h2>
-            <div class="table-box">
-              <table>
-                <thead><tr><th>Status</th><th>Quantidade</th><th>%</th></tr></thead>
-                <tbody id="tbody-relatorio-status"><tr><td colspan="3" class="empty">Carregando...</td></tr></tbody>
-              </table>
-            </div>
+            <div class="table-box"><table><thead><tr><th>Status</th><th>Quantidade</th><th>%</th></tr></thead><tbody id="tbody-relatorio-status"><tr><td colspan="3" class="empty">Carregando...</td></tr></tbody></table></div>
           </div>
+        </div>
+      </section>
+
+      <!-- FUNCIONÁRIOS (só admin) -->
+      <section id="page-funcionarios" class="page">
+        <div class="page-header">
+          <div><h1>Funcionários</h1><p class="page-sub">Gerencie os usuários do sistema</p></div>
+          <button type="button" class="btn-primary" onclick="abrirModalFuncionario()">+ Novo funcionário</button>
+        </div>
+        <div class="table-box">
+          <table>
+            <thead><tr><th>Nome</th><th>Email</th><th>Cargo</th><th>Perfil</th><th>Ações</th></tr></thead>
+            <tbody id="tbody-funcionarios"><tr><td colspan="5" class="empty">Carregando...</td></tr></tbody>
+          </table>
         </div>
       </section>
 
@@ -266,10 +197,7 @@
   <!-- MODAL: CLIENTE -->
   <div class="modal-overlay" id="modal-cliente">
     <div class="modal">
-      <div class="modal-header">
-        <h2 id="modal-cliente-titulo">Novo Cliente</h2>
-        <button type="button" class="modal-close" onclick="fecharModalCliente()">✕</button>
-      </div>
+      <div class="modal-header"><h2 id="modal-cliente-titulo">Novo Cliente</h2><button type="button" class="modal-close" onclick="fecharModalCliente()">✕</button></div>
       <input type="hidden" id="cliente-id">
       <div class="form-group"><label>Nome *</label><input type="text" id="cliente-nome" placeholder="Nome completo"></div>
       <div class="form-row">
@@ -288,17 +216,11 @@
   <!-- MODAL: PRODUTO -->
   <div class="modal-overlay" id="modal-produto">
     <div class="modal">
-      <div class="modal-header">
-        <h2 id="modal-produto-titulo">Novo Produto</h2>
-        <button type="button" class="modal-close" onclick="fecharModalProduto()">✕</button>
-      </div>
+      <div class="modal-header"><h2 id="modal-produto-titulo">Novo Produto</h2><button type="button" class="modal-close" onclick="fecharModalProduto()">✕</button></div>
       <input type="hidden" id="produto-id">
       <div class="form-group"><label>Nome *</label><input type="text" id="produto-nome" placeholder="Nome do produto"></div>
       <div class="form-row">
-        <div class="form-group">
-          <label>Categoria *</label>
-          <select id="produto-id-categoria"><option value="">Selecione...</option></select>
-        </div>
+        <div class="form-group"><label>Categoria *</label><select id="produto-id-categoria"><option value="">Selecione...</option></select></div>
         <div class="form-group"><label>Preço base (R$) *</label><input type="number" id="produto-preco" placeholder="0.00" step="0.01" min="0"></div>
       </div>
       <div class="form-group"><label>Preço por kg (R$)</label><input type="number" id="produto-preco-kg" placeholder="0.00" step="0.01" min="0"></div>
@@ -313,10 +235,7 @@
   <!-- MODAL: CATEGORIA -->
   <div class="modal-overlay" id="modal-categoria">
     <div class="modal">
-      <div class="modal-header">
-        <h2 id="modal-categoria-titulo">Nova Categoria</h2>
-        <button type="button" class="modal-close" onclick="fecharModalCategoria()">✕</button>
-      </div>
+      <div class="modal-header"><h2 id="modal-categoria-titulo">Nova Categoria</h2><button type="button" class="modal-close" onclick="fecharModalCategoria()">✕</button></div>
       <input type="hidden" id="categoria-id">
       <div class="form-group"><label>Nome *</label><input type="text" id="categoria-nome" placeholder="Ex: Bolo, Doce, Torta..."></div>
       <div class="form-group"><label>Descrição</label><input type="text" id="categoria-descricao" placeholder="Descrição da categoria"></div>
@@ -330,15 +249,9 @@
   <!-- MODAL: LOTE -->
   <div class="modal-overlay" id="modal-lote">
     <div class="modal">
-      <div class="modal-header">
-        <h2 id="modal-lote-titulo">Adicionar Lote</h2>
-        <button type="button" class="modal-close" onclick="fecharModalLote()">✕</button>
-      </div>
+      <div class="modal-header"><h2 id="modal-lote-titulo">Adicionar Lote</h2><button type="button" class="modal-close" onclick="fecharModalLote()">✕</button></div>
       <input type="hidden" id="lote-id">
-      <div class="form-group">
-        <label>Produto *</label>
-        <select id="lote-produto"><option value="">Selecione...</option></select>
-      </div>
+      <div class="form-group"><label>Produto *</label><select id="lote-produto"><option value="">Selecione...</option></select></div>
       <div class="form-row">
         <div class="form-group"><label>Lote *</label><input type="text" id="lote-numero" placeholder="LOTE-001"></div>
         <div class="form-group"><label>Quantidade disponível *</label><input type="number" id="lote-quantidade" placeholder="0" min="1"></div>
@@ -357,34 +270,18 @@
   <!-- MODAL: NOVO PEDIDO -->
   <div class="modal-overlay" id="modal-pedido">
     <div class="modal modal-large">
-      <div class="modal-header">
-        <h2>Novo Pedido</h2>
-        <button type="button" class="modal-close" onclick="fecharModalPedido()">✕</button>
-      </div>
+      <div class="modal-header"><h2>Novo Pedido</h2><button type="button" class="modal-close" onclick="fecharModalPedido()">✕</button></div>
       <div class="form-row">
-        <div class="form-group">
-          <label>Cliente *</label>
-          <select id="pedido-cliente"><option value="">Selecione...</option></select>
-        </div>
-        <div class="form-group">
-          <label>Funcionário *</label>
-          <select id="pedido-funcionario"><option value="">Selecione...</option></select>
-        </div>
+        <div class="form-group"><label>Cliente *</label><select id="pedido-cliente"><option value="">Selecione...</option></select></div>
+        <div class="form-group"><label>Funcionário *</label><select id="pedido-funcionario"><option value="">Selecione...</option></select></div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Data de entrega *</label><input type="date" id="pedido-data-entrega"></div>
         <div class="form-group"><label>Observações</label><input type="text" id="pedido-observacoes" placeholder="Observações..."></div>
       </div>
-      <div class="form-section-title">
-        Itens do pedido *
-        <button type="button" class="btn-secondary btn-sm" onclick="adicionarItemPedido()">+ Item</button>
-      </div>
-      <div id="pedido-itens-lista">
-        <p class="empty-inline">Clique em "+ Item" para adicionar</p>
-      </div>
-      <div class="form-toggle">
-        <label><input type="checkbox" id="pedido-tem-entrega" onchange="toggleEntrega()"> Incluir entrega</label>
-      </div>
+      <div class="form-section-title">Itens do pedido * <button type="button" class="btn-secondary btn-sm" onclick="adicionarItemPedido()">+ Item</button></div>
+      <div id="pedido-itens-lista"><p class="empty-inline">Clique em "+ Item" para adicionar</p></div>
+      <div class="form-toggle"><label><input type="checkbox" id="pedido-tem-entrega" onchange="toggleEntrega()"> Incluir entrega</label></div>
       <div id="pedido-entrega-fields" style="display:none">
         <div class="form-group"><label>Nome do recebedor * (mín. 10 caracteres)</label><input type="text" id="pedido-recebedor"></div>
         <div class="form-group"><label>Endereço de entrega * (mín. 10 caracteres)</label><input type="text" id="pedido-endereco-entrega"></div>
@@ -400,10 +297,7 @@
   <!-- MODAL: ATUALIZAR STATUS DO PEDIDO -->
   <div class="modal-overlay" id="modal-pedido-editar">
     <div class="modal">
-      <div class="modal-header">
-        <h2>Atualizar Status do Pedido</h2>
-        <button type="button" class="modal-close" onclick="fecharModalPedidoEditar()">✕</button>
-      </div>
+      <div class="modal-header"><h2>Atualizar Status do Pedido</h2><button type="button" class="modal-close" onclick="fecharModalPedidoEditar()">✕</button></div>
       <input type="hidden" id="pedido-edit-id">
       <div class="form-group">
         <label>Status *</label>
@@ -418,6 +312,37 @@
       <div class="modal-footer">
         <button type="button" class="btn-secondary" onclick="fecharModalPedidoEditar()">Cancelar</button>
         <button type="button" class="btn-primary" onclick="salvarPedidoEditado()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: FUNCIONÁRIO -->
+  <div class="modal-overlay" id="modal-funcionario">
+    <div class="modal">
+      <div class="modal-header"><h2 id="modal-funcionario-titulo">Novo Funcionário</h2><button type="button" class="modal-close" onclick="fecharModalFuncionario()">✕</button></div>
+      <input type="hidden" id="func-id">
+      <div class="form-group"><label>Nome *</label><input type="text" id="func-nome" placeholder="Nome completo"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Email *</label><input type="email" id="func-email" placeholder="email@exemplo.com"></div>
+        <div class="form-group"><label>Senha (deixe em branco para manter)</label><input type="password" id="func-senha" placeholder="••••••"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Telefone *</label><input type="text" id="func-telefone" placeholder="11999999999"></div>
+        <div class="form-group"><label>Cargo *</label><input type="text" id="func-cargo" placeholder="Ex: Confeiteiro, Atendente..."></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Perfil *</label>
+          <select id="func-perfil">
+            <option value="funcionario">Funcionário</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Data de admissão *</label><input type="date" id="func-admissao"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="fecharModalFuncionario()">Cancelar</button>
+        <button type="button" class="btn-primary" onclick="salvarFuncionario()">Salvar</button>
       </div>
     </div>
   </div>

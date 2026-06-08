@@ -25,6 +25,15 @@ router.post("/", validar(ProdutoSchema), (req, res) => {
   }
 });
 
+// PUT — atualiza um produto (parcial)
+router.put("/:id", validar(ProdutoSchema.partial()), (req, res) => {
+  try {
+    res.json(produtoService.atualizar(Number(req.params.id), req.body));
+  } catch (err: any) {
+    res.status(404).json({ erro: err.message });
+  }
+});
+
 router.delete("/:id", (req, res) => {
   try {
     produtoService.inativar(Number(req.params.id));

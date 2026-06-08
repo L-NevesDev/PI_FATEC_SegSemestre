@@ -23,8 +23,20 @@ export const produtoRepository = {
       INSERT INTO Produto (id_categoria, nome_produto, descricao, preco_base, preco_kg, ativo)
       VALUES (@id_categoria, @nome_produto, @descricao, @preco_base, @preco_kg, 1)
     `).run({ descricao: null, preco_kg: null, ...dados });
-
     return { id_produto: Number(resultado.lastInsertRowid), ativo: 1, ...dados };
+  },
+
+  atualizar: (id: number, dados: Partial<Omit<Produto, "id_produto">>): void => {
+    db.prepare(`
+      UPDATE Produto SET
+        id_categoria  = COALESCE(@id_categoria,  id_categoria),
+        nome_produto  = COALESCE(@nome_produto,  nome_produto),
+        descricao     = COALESCE(@descricao,     descricao),
+        preco_base    = COALESCE(@preco_base,    preco_base),
+        preco_kg      = COALESCE(@preco_kg,      preco_kg),
+        ativo         = COALESCE(@ativo,         ativo)
+      WHERE id_produto = @id
+    `).run({ id_categoria: null, nome_produto: null, descricao: null, preco_base: null, preco_kg: null, ativo: null, ...dados, id });
   },
 
   inativar: (id: number): void => {
